@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "AI Lab & SOC Crisis Simulator | Aegis AI vs. Vanguard AI",
+  title: "SITREP // AI-SOC TABLETOP EXERCISE (AEGIS vs. VANGUARD)",
   description:
-    "Interactive 50-player, 10-table tabletop cybersecurity & frontier AI incident response simulation.",
+    "50-Participant Frontier AI & Security Operations Center Tabletop Crisis Exercise.",
 };
 
 export default function RootLayout({
@@ -13,8 +13,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
-      <body className="min-h-screen bg-[#070b14] text-slate-100 antialiased selection:bg-cyan-500/30 selection:text-cyan-200">
+    <html lang="en">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className="min-h-screen antialiased selection:bg-[#C8322B] selection:text-[#FAF8F3]">
         {children}
       </body>
     </html>

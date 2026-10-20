@@ -1,24 +1,80 @@
 @import "tailwindcss";
 
 :root {
-  --bg-obsidian: #070b14;
-  --bg-panel: #0f172a;
+  --paper-bg: #f2ede2;
+  --paper-sheet: #faf7f0;
+  --paper-muted: #e6dfd1;
+  --ink-black: #121211;
+  --ink-muted: #57534e;
+  --rule-color: #121211;
+  --rule-subtle: #c8c0b0;
+  --signal-red: #c8322b;
+  --aegis-blue: #1846c7;
+  --vanguard-orange: #c84b15;
+  --cleared-green: #166534;
+  --font-display: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", "SF Mono", Menlo, monospace;
+  --font-serif: "Newsreader", "Iowan Old Style", Charter, Georgia, serif;
 }
 
 body {
-  background-color: var(--bg-obsidian);
-  color: #f8fafc;
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--paper-bg);
+  color: var(--ink-black);
+  font-family: var(--font-display), -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-display), sans-serif;
+}
+
+.font-mono-tech {
+  font-family: var(--font-mono), monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.font-editorial {
+  font-family: var(--font-serif), Georgia, serif;
+}
+
+/* Subtle architectural dot/grid background for dossier pages */
+.dossier-surface {
+  background-color: #f2ede2;
+  background-image: radial-gradient(#beb6a6 0.75px, transparent 0.75px);
+  background-size: 18px 18px;
+}
+
+/* Ink stamp effect */
+.stamp-badge {
+  display: inline-block;
+  border: 1.5px solid currentColor;
+  padding: 0.125rem 0.5rem;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Hard architectural shadow */
+.dossier-sheet {
+  background-color: #faf7f0;
+  border: 1.5px solid #121211;
+  box-shadow: 4px 4px 0px #121211;
+}
+
+.dossier-sheet-sm {
+  background-color: #faf7f0;
+  border: 1px solid #121211;
+  box-shadow: 2px 2px 0px #121211;
 }
 
 /* Modern Web Guidance: responsive-table implementation */
 .table-wrapper {
   overflow: auto;
   max-inline-size: 100%;
-  max-block-size: min(560px, 80vh);
+  max-block-size: min(580px, 80vh);
   container-type: inline-size;
-  border-radius: 0.75rem;
-  border: 1px solid rgba(51, 65, 85, 0.7);
+  border: 1.5px solid #2e2d2a;
 }
 
 .responsive-sim-table {
@@ -31,21 +87,21 @@ body {
   --label-5: "Trust";
   --label-6: "Growth";
   --label-7: "Status";
-  --label-8: "Total Score";
+  --label-8: "Composite";
 }
 
 .responsive-sim-table thead {
   position: sticky;
   inset-block-start: 0;
   z-index: 2;
-  background: #0f172a;
+  background: #161614;
 }
 
 .responsive-sim-table tbody th {
   position: sticky;
   inset-inline-start: 0;
   z-index: 1;
-  background: #0f172a;
+  background: #121211;
 }
 
 @container (width < 600px) {
@@ -65,51 +121,49 @@ body {
 
   .responsive-sim-table tr {
     margin-block-end: 1rem;
-    border: 1px solid rgba(71, 85, 105, 0.6);
-    border-radius: 0.5rem;
-    overflow: hidden;
+    border: 1px solid #3f3e3a;
   }
 
   .responsive-sim-table tbody th {
     position: sticky;
     inset-block-start: 0;
     z-index: 2;
-    background: #1e293b;
+    background: #1c1c19;
   }
 
   .responsive-sim-table td:nth-child(2)::before {
     content: var(--label-2) ": ";
     font-weight: 600;
-    color: #94a3b8;
+    color: #a8a29e;
   }
   .responsive-sim-table td:nth-child(3)::before {
     content: var(--label-3) ": ";
     font-weight: 600;
-    color: #94a3b8;
+    color: #a8a29e;
   }
   .responsive-sim-table td:nth-child(4)::before {
     content: var(--label-4) ": ";
     font-weight: 600;
-    color: #94a3b8;
+    color: #a8a29e;
   }
   .responsive-sim-table td:nth-child(5)::before {
     content: var(--label-5) ": ";
     font-weight: 600;
-    color: #94a3b8;
+    color: #a8a29e;
   }
   .responsive-sim-table td:nth-child(6)::before {
     content: var(--label-6) ": ";
     font-weight: 600;
-    color: #94a3b8;
+    color: #a8a29e;
   }
   .responsive-sim-table td:nth-child(7)::before {
     content: var(--label-7) ": ";
     font-weight: 600;
-    color: #94a3b8;
+    color: #a8a29e;
   }
   .responsive-sim-table td:nth-child(8)::before {
     content: var(--label-8) ": ";
     font-weight: 600;
-    color: #94a3b8;
+    color: #a8a29e;
   }
 }

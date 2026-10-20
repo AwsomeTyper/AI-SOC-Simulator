@@ -3,27 +3,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import {
-  Shield,
-  Terminal,
-  Cpu,
-  TrendingUp,
-  Scale,
-  Crown,
-  Users,
-  Clock,
-  AlertTriangle,
-  CheckCircle2,
-  Lock,
-  Unlock,
-  BookOpen,
-  ArrowRight,
-  RefreshCw,
-  Award,
-  Sparkles,
-  ChevronRight,
-  Radio,
-} from "lucide-react";
-import {
   ACTS,
   getTableArenaNumber,
   getTableLabId,
@@ -44,18 +23,14 @@ interface SimApiPayload {
   arenaDebriefs: Record<string, ArenaDebriefPackage>;
 }
 
-const ROLE_ICON_MAP: Record<RoleId, React.ReactNode> = {
-  ceo: <Crown className="w-4 h-4 text-amber-400" />,
-  cyber: <Shield className="w-4 h-4 text-cyan-400" />,
-  research: <Cpu className="w-4 h-4 text-purple-400" />,
-  growth: <TrendingUp className="w-4 h-4 text-emerald-400" />,
-  policy: <Scale className="w-4 h-4 text-rose-400" />,
-};
-
 function formatTimer(seconds: number): string {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
   return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+}
+
+function pad2(n: number): string {
+  return String(n).padStart(2, "0");
 }
 
 export default function StudentSimulatorPage() {
@@ -63,7 +38,9 @@ export default function StudentSimulatorPage() {
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [joinName, setJoinName] = useState("");
   const [selectedTable, setSelectedTable] = useState<number>(1);
-  const [activeTab, setActiveTab] = useState<"role" | "team" | "results">("role");
+  const [activeTab, setActiveTab] = useState<"role" | "team" | "results">(
+    "role"
+  );
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -98,7 +75,6 @@ export default function StudentSimulatorPage() {
       ? 3
       : 1;
 
-  // Automatically switch to "results" tab when an Admin unlocks the current Act for this player's table
   const myTable: ComputedTableView | null =
     data && currentPlayer
       ? data.computedTables[currentPlayer.tableNumber]
@@ -132,7 +108,7 @@ export default function StudentSimulatorPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setErrorMsg(json.error || "Failed to join table");
+        setErrorMsg(json.error || "Failed to register seat.");
       } else {
         setData(json);
         if (json.joinedPlayer?.id) {
@@ -141,7 +117,7 @@ export default function StudentSimulatorPage() {
         }
       }
     } catch {
-      setErrorMsg("Network error while joining table.");
+      setErrorMsg("Transmission error while registering seat.");
     } finally {
       setSubmitting(false);
     }
@@ -185,7 +161,7 @@ export default function StudentSimulatorPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setErrorMsg(json.error || "Could not submit action.");
+        setErrorMsg(json.error || "Could not record directive.");
       } else {
         setData(json);
       }
@@ -212,7 +188,7 @@ export default function StudentSimulatorPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setErrorMsg(json.error || "Could not lock in team decision.");
+        setErrorMsg(json.error || "Could not ratify table resolution.");
       } else {
         setData(json);
       }
@@ -228,341 +204,450 @@ export default function StudentSimulatorPage() {
 
   if (!data) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#070b14] text-slate-200">
-        <div className="flex items-center gap-3 text-cyan-400">
-          <RefreshCw className="w-5 h-5 animate-spin" />
-          <span className="font-mono text-sm tracking-wider uppercase">
-            Connecting to AI SOC Tactical Engine...
-          </span>
+      <div className="min-h-screen dossier-surface flex items-center justify-center p-6">
+        <div className="dossier-sheet px-8 py-6 font-mono-tech text-xs uppercase tracking-widest">
+          [ INITIALIZING TACTICAL DOSSIER TERMINAL // STAND BY... ]
         </div>
       </div>
     );
   }
 
   const { state, computedTables, arenaDebriefs } = data;
-  const rivalTableNumber =
-    currentPlayer
-      ? currentPlayer.tableNumber % 2 === 1
-        ? currentPlayer.tableNumber + 1
-        : currentPlayer.tableNumber - 1
-      : null;
-  const rivalTable =
-    rivalTableNumber ? computedTables[rivalTableNumber] : null;
+  const rivalTableNumber = currentPlayer
+    ? currentPlayer.tableNumber % 2 === 1
+      ? currentPlayer.tableNumber + 1
+      : currentPlayer.tableNumber - 1
+    : null;
+  const rivalTable = rivalTableNumber ? computedTables[rivalTableNumber] : null;
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#070b14] text-slate-100">
-      {/* Top Tactical Navigation Header */}
-      <header className="sticky top-0 z-30 border-b border-slate-800/90 bg-[#0b1120]/95 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-cyan-500/15 border border-cyan-500/40 flex items-center justify-center text-cyan-400">
-              <Shield className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-bold tracking-tight text-white">
-                  AI SOC CRISIS SIMULATOR
-                </span>
-                <span className="text-[11px] font-mono uppercase px-2 py-0.5 rounded bg-slate-800 text-cyan-300 border border-slate-700">
+    <div className="min-h-screen dossier-surface flex flex-col text-[#121211]">
+      {/* Top Archival Classification Masthead */}
+      <header className="border-b-2 border-[#121211] bg-[#FAF7F0] sticky top-0 z-30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch">
+            {/* Title & Document Control Number */}
+            <div className="lg:col-span-5 py-3 lg:pr-6 lg:border-r border-[#121211] flex flex-col justify-center">
+              <div className="flex items-center gap-2 font-mono-tech text-[11px] uppercase tracking-widest text-[#57534E]">
+                <span>DOC // SITREP-2026-SOC</span>
+                <span>•</span>
+                <span className="text-[#C8322B] font-semibold">
                   {state.phase === "lobby"
-                    ? "PHASE: LOBBY"
+                    ? "STAGE 00: BRIEFING"
                     : state.phase === "debrief"
-                    ? "PHASE: FINAL DEBRIEF"
-                    : `PHASE: ACT ${currentActNumber} OF 3`}
+                    ? "STAGE 04: DECLASSIFIED"
+                    : `STAGE 0${currentActNumber}: ACTIVE INCIDENT`}
                 </span>
               </div>
-              <p className="text-xs text-slate-400 hidden sm:block">
-                Frontier AI Labs & Security Operations Tabletop Exercise (5v5 Arena Format)
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 flex-wrap">
-            {/* Live Round Countdown Timer */}
-            <div
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border font-mono text-sm ${
-                state.timerRunning
-                  ? "bg-amber-500/10 border-amber-500/40 text-amber-300"
-                  : "bg-slate-900 border-slate-800 text-slate-400"
-              }`}
-            >
-              <Clock className="w-4 h-4" />
-              <span>{formatTimer(state.timerSecondsRemaining)}</span>
-            </div>
-
-            {currentPlayer && (
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs">
-                <span className="font-semibold text-white">
-                  Table {currentPlayer.tableNumber}
-                </span>
-                <span className="text-slate-500">•</span>
-                <span
-                  className={
-                    currentPlayer.labId === "aegis"
-                      ? "text-sky-400 font-medium"
-                      : "text-amber-400 font-medium"
-                  }
-                >
-                  {LAB_PROFILES[currentPlayer.labId].shortName}
-                </span>
-                <span className="text-slate-500">•</span>
-                <span className="text-slate-300">{currentPlayer.name}</span>
-                <button
-                  onClick={handleLeaveSession}
-                  className="ml-1 text-[11px] text-slate-400 hover:text-rose-400 underline"
-                  title="Switch Table or Name"
-                >
-                  Switch
-                </button>
+              <div className="text-lg sm:text-xl font-bold tracking-tight uppercase mt-0.5">
+                AI Lab &amp; SOC Tabletop Crisis Exercise
               </div>
-            )}
+            </div>
 
-            <div className="flex items-center gap-2 text-xs">
-              <Link
-                href="/admin"
-                className="px-3 py-1.5 rounded-lg bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-500/30 font-medium transition"
-              >
-                Admin Console (3)
-              </Link>
-              <Link
-                href="/gm"
-                className="px-3 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 font-medium transition"
-              >
-                GM Projector
-              </Link>
+            {/* Active Table & Operative Clearance Cell */}
+            <div className="lg:col-span-4 py-2.5 lg:px-5 border-t lg:border-t-0 lg:border-r border-[#121211] flex items-center justify-between">
+              {currentPlayer ? (
+                <div className="w-full flex items-center justify-between gap-2">
+                  <div className="font-mono-tech text-xs">
+                    <div className="text-[10px] uppercase tracking-wider text-[#57534E]">
+                      ASSIGNED STATION // ARENA {pad2(currentPlayer.arenaNumber)}
+                    </div>
+                    <div className="font-bold text-sm">
+                      TABLE {pad2(currentPlayer.tableNumber)} —{" "}
+                      <span
+                        className={
+                          currentPlayer.labId === "aegis"
+                            ? "text-[#1846C7]"
+                            : "text-[#C84B15]"
+                        }
+                      >
+                        {LAB_PROFILES[currentPlayer.labId].shortName.toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-[#57534E]">
+                      OPERATIVE: <strong className="text-[#121211]">{currentPlayer.name}</strong>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleLeaveSession}
+                    className="px-2.5 py-1 border border-[#121211] bg-[#F2EDE2] hover:bg-[#121211] hover:text-[#FAF7F0] font-mono-tech text-[10px] uppercase tracking-wider transition cursor-pointer"
+                  >
+                    Reassign
+                  </button>
+                </div>
+              ) : (
+                <div className="font-mono-tech text-xs text-[#57534E] uppercase">
+                  STATUS: UNASSIGNED PARTICIPANT // SELECT TABLE BELOW
+                </div>
+              )}
+            </div>
+
+            {/* Clock & Mode Links Cell */}
+            <div className="lg:col-span-3 py-2.5 lg:pl-5 border-t lg:border-t-0 border-[#121211] flex items-center justify-between gap-3">
+              <div className="font-mono-tech">
+                <div className="text-[10px] uppercase tracking-wider text-[#57534E]">
+                  PHASE CLOCK
+                </div>
+                <div
+                  className={`text-lg font-bold leading-none mt-0.5 ${
+                    state.timerRunning ? "text-[#C8322B]" : "text-[#121211]"
+                  }`}
+                >
+                  {formatTimer(state.timerSecondsRemaining)}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1.5 font-mono-tech text-[11px] uppercase">
+                <Link
+                  href="/admin"
+                  className="px-2.5 py-1.5 border border-[#121211] bg-[#F2EDE2] hover:bg-[#121211] hover:text-[#FAF7F0] font-semibold transition"
+                >
+                  Admin [3]
+                </Link>
+                <Link
+                  href="/gm"
+                  className="px-2.5 py-1.5 border border-[#121211] bg-[#121211] text-[#FAF7F0] hover:bg-[#292826] font-semibold transition"
+                >
+                  War Room
+                </Link>
+              </div>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8">
         {errorMsg && (
-          <div className="mb-6 p-4 rounded-xl bg-rose-500/15 border border-rose-500/40 text-rose-200 flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm">
-              <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+          <div className="mb-6 p-4 border-2 border-[#C8322B] bg-[#FAF7F0] flex items-center justify-between font-mono-tech text-xs">
+            <div>
+              <strong className="text-[#C8322B] uppercase mr-2">
+                [TRANSMISSION EXCEPTION]:
+              </strong>
               <span>{errorMsg}</span>
             </div>
             <button
+              type="button"
               onClick={() => setErrorMsg(null)}
-              className="text-xs underline text-rose-300"
+              className="underline uppercase font-semibold cursor-pointer"
             >
-              Dismiss
+              Clear
             </button>
           </div>
         )}
 
-        {/* VIEW 1: STUDENT ONBOARDING / TABLE SELECTION */}
+        {/* ===================================================================
+            VIEW 1: PARTICIPANT SEAT & TABLE REGISTRATION LEDGER
+           =================================================================== */}
         {!currentPlayer ? (
-          <div className="max-w-4xl mx-auto">
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 sm:p-8 shadow-2xl">
-              <div className="max-w-2xl">
-                <span className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider px-2.5 py-1 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 mb-3">
-                  <Radio className="w-3.5 h-3.5" /> Student Terminal Onboarding
-                </span>
-                <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-                  Take Your Seat & Join Your AI Lab Crisis Table
-                </h1>
-                <p className="mt-2 text-slate-300 text-sm sm:text-base leading-relaxed">
-                  You and your 4 tablemates are the Executive & Security Operations Center (SOC) leadership team of a frontier AI lab. Across your Arena sits your rival AI lab. Over the next hour, both labs will face three real-world AI cybersecurity crises.
-                </p>
+          <div className="dossier-sheet">
+            {/* Top Dossier Classification Banner */}
+            <div className="border-b-2 border-[#121211] bg-[#E6DFD1] px-6 py-3 flex flex-wrap items-center justify-between gap-2 font-mono-tech text-xs uppercase">
+              <span>FORM 01-A // PARTICIPANT TABLE &amp; LAB ASSIGNMENT</span>
+              <span>50 PARTICIPANTS • 10 TABLES • 5 ARENAS</span>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12">
+              {/* Left Column: Editorial Exercise Briefing */}
+              <div className="lg:col-span-5 p-6 sm:p-8 border-b lg:border-b-0 lg:border-r-2 border-[#121211] flex flex-col justify-between bg-[#FAF7F0]">
+                <div className="space-y-5">
+                  <div>
+                    <span className="stamp-badge text-[#C8322B]">
+                      BRIEFING DOSSIER // FOR EXERCISE USE ONLY
+                    </span>
+                    <h1 className="text-3xl sm:text-4xl font-bold uppercase tracking-tight leading-none mt-4">
+                      Two Rival AI Labs. Three Live Cyber Crises.
+                    </h1>
+                  </div>
+
+                  <p className="font-editorial text-lg leading-relaxed text-[#262523]">
+                    You and the four colleagues seated at your physical table form the crisis command cell of a frontier Artificial Intelligence laboratory. Directly across your Arena sits your primary competitor.
+                  </p>
+
+                  <p className="text-sm leading-relaxed text-[#44403C]">
+                    Over the next sixty minutes, both labs will navigate three escalating security incidents modeled on real-world frontier AI breaches: compromised model-hub tokens, malicious Python pickle checkpoints, autonomous coding-agent container escapes, and pre-launch weight extortion.
+                  </p>
+
+                  <div className="border-t-2 border-[#121211] pt-4 space-y-3">
+                    <div className="font-mono-tech text-xs uppercase tracking-wider font-semibold">
+                      Competing Laboratory Profiles
+                    </div>
+
+                    <div className="p-3.5 border border-[#121211] bg-[#F2EDE2]">
+                      <div className="flex items-center justify-between font-mono-tech text-xs">
+                        <strong className="text-[#1846C7] uppercase">
+                          ODD TABLES (01, 03, 05, 07, 09) // AEGIS FRONTIER LABS
+                        </strong>
+                      </div>
+                      <p className="text-xs text-[#44403C] mt-1 leading-relaxed">
+                        Defense-integrated, safety-first architecture. Starts with higher Security Posture (55) &amp; Regulatory Trust (55), but trails in commercial deployment speed.
+                      </p>
+                    </div>
+
+                    <div className="p-3.5 border border-[#121211] bg-[#F2EDE2]">
+                      <div className="flex items-center justify-between font-mono-tech text-xs">
+                        <strong className="text-[#C84B15] uppercase">
+                          EVEN TABLES (02, 04, 06, 08, 10) // VANGUARD OMNI AI
+                        </strong>
+                      </div>
+                      <p className="text-xs text-[#44403C] mt-1 leading-relaxed">
+                        Hyper-scale open-weights &amp; commercial blitz lab. Starts with higher Model Capability (55) &amp; Market Velocity (55), but carries a wider attack surface.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-8 pt-4 border-t border-[#C8C0B0] font-mono-tech text-[11px] text-[#57534E] uppercase">
+                  NO DICE OR RANDOM LUCK // OUTCOMES ARE DETERMINED STRICTLY BY YOUR TECHNICAL &amp; STRATEGIC DECISIONS.
+                </div>
               </div>
 
-              <form onSubmit={handleJoinTable} className="mt-6 space-y-6">
-                <div>
-                  <label
-                    htmlFor="student-name"
-                    className="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-2"
-                  >
-                    1. Enter Your First & Last Name
-                  </label>
-                  <input
-                    id="student-name"
-                    type="text"
-                    required
-                    value={joinName}
-                    onChange={(e) => setJoinName(e.target.value)}
-                    placeholder="e.g., Alex Rivera"
-                    className="w-full sm:max-w-md px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-3">
-                    2. Select Your Physical Table Number (Tables 1–10 Across 5 Arenas)
-                  </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-                    {Array.from({ length: 10 }, (_, i) => i + 1).map((tNum) => {
-                      const labId = getTableLabId(tNum);
-                      const arenaNum = getTableArenaNumber(tNum);
-                      const tView = computedTables[tNum];
-                      const isSelected = selectedTable === tNum;
-                      const isAegis = labId === "aegis";
-
-                      return (
-                        <button
-                          key={tNum}
-                          type="button"
-                          onClick={() => setSelectedTable(tNum)}
-                          className={`text-left p-3.5 rounded-xl border transition flex flex-col justify-between ${
-                            isSelected
-                              ? isAegis
-                                ? "bg-sky-500/20 border-sky-400 ring-2 ring-sky-400/30"
-                                : "bg-amber-500/20 border-amber-400 ring-2 ring-amber-400/30"
-                              : "bg-slate-950/80 border-slate-800 hover:border-slate-700"
-                          }`}
-                        >
-                          <div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs font-mono text-slate-400">
-                                Arena {arenaNum}
-                              </span>
-                              <span
-                                className={`text-[11px] font-mono px-1.5 py-0.5 rounded ${
-                                  isAegis
-                                    ? "bg-sky-500/15 text-sky-300"
-                                    : "bg-amber-500/15 text-amber-300"
-                                }`}
-                              >
-                                {isAegis ? "Aegis AI" : "Vanguard AI"}
-                              </span>
-                            </div>
-                            <div className="mt-1.5 text-lg font-bold text-white">
-                              Table {tNum}
-                            </div>
-                          </div>
-                          <div className="mt-3 flex items-center justify-between text-xs text-slate-400">
-                            <span className="flex items-center gap-1">
-                              <Users className="w-3.5 h-3.5" />
-                              {tView.players.length} / 5 seated
-                            </span>
-                            {isSelected && (
-                              <span className="text-cyan-300 font-semibold">
-                                Selected
-                              </span>
-                            )}
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="pt-2 flex flex-wrap items-center justify-between gap-4 border-t border-slate-800">
-                  <div className="text-xs text-slate-400">
-                    Joining{" "}
-                    <strong className="text-white">Table {selectedTable}</strong>{" "}
-                    (Arena {getTableArenaNumber(selectedTable)} —{" "}
-                    <span
-                      className={
-                        getTableLabId(selectedTable) === "aegis"
-                          ? "text-sky-400 font-semibold"
-                          : "text-amber-400 font-semibold"
-                      }
+              {/* Right Column: Physical Table Map & Registration Form */}
+              <div className="lg:col-span-7 p-6 sm:p-8 bg-[#FAF7F0]">
+                <form onSubmit={handleJoinTable} className="space-y-6">
+                  <div>
+                    <label
+                      htmlFor="operative-name"
+                      className="block font-mono-tech text-xs uppercase tracking-wider font-bold mb-2"
                     >
-                      {LAB_PROFILES[getTableLabId(selectedTable)].name}
-                    </span>
-                    )
+                      § 1.1 — Enter Operative Full Name
+                    </label>
+                    <input
+                      id="operative-name"
+                      type="text"
+                      required
+                      value={joinName}
+                      onChange={(e) => setJoinName(e.target.value)}
+                      placeholder="e.g., Jordan Vance"
+                      className="w-full px-4 py-3 border-2 border-[#121211] bg-[#F2EDE2] font-mono-tech text-sm text-[#121211] placeholder-[#78716C] focus:outline-none focus:bg-white"
+                    />
                   </div>
-                  <button
-                    type="submit"
-                    disabled={submitting || !joinName.trim()}
-                    className="px-6 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-slate-950 font-bold text-sm flex items-center gap-2 transition shadow-lg shadow-cyan-500/20 cursor-pointer"
-                  >
-                    <span>Join Table {selectedTable}</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </form>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="font-mono-tech text-xs uppercase tracking-wider font-bold">
+                        § 1.2 — Select Your Physical Table Assignment (Arenas 01–05)
+                      </label>
+                      <span className="font-mono-tech text-[11px] text-[#57534E]">
+                        5 SEATS PER TABLE
+                      </span>
+                    </div>
+
+                    {/* 5 Arenas Architecture Schematic */}
+                    <div className="border-2 border-[#121211] divide-y-2 divide-[#121211]">
+                      {[1, 2, 3, 4, 5].map((arenaNum) => {
+                        const oddT = (arenaNum - 1) * 2 + 1;
+                        const evenT = oddT + 1;
+
+                        return (
+                          <div
+                            key={arenaNum}
+                            className="grid grid-cols-1 sm:grid-cols-12 items-stretch"
+                          >
+                            <div className="sm:col-span-2 bg-[#E6DFD1] px-3 py-2 flex sm:flex-col items-center sm:items-start justify-between sm:justify-center border-b sm:border-b-0 sm:border-r-2 border-[#121211] font-mono-tech">
+                              <span className="text-[10px] uppercase text-[#57534E]">
+                                MATCHUP
+                              </span>
+                              <span className="text-xs font-bold uppercase">
+                                ARENA {pad2(arenaNum)}
+                              </span>
+                            </div>
+
+                            {[oddT, evenT].map((tNum) => {
+                              const isAegis = getTableLabId(tNum) === "aegis";
+                              const tView = computedTables[tNum];
+                              const count = tView.players.length;
+                              const isSelected = selectedTable === tNum;
+
+                              return (
+                                <button
+                                  key={tNum}
+                                  type="button"
+                                  onClick={() => setSelectedTable(tNum)}
+                                  className={`sm:col-span-5 p-3.5 text-left transition flex flex-col justify-between cursor-pointer ${
+                                    tNum === oddT
+                                      ? "border-b sm:border-b-0 sm:border-r border-[#121211]"
+                                      : ""
+                                  } ${
+                                    isSelected
+                                      ? "bg-[#121211] text-[#FAF7F0]"
+                                      : "bg-[#FAF7F0] hover:bg-[#F2EDE2] text-[#121211]"
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between gap-2">
+                                    <span className="font-bold text-sm uppercase tracking-tight">
+                                      TABLE {pad2(tNum)}
+                                    </span>
+                                    <span
+                                      className={`font-mono-tech text-[10px] uppercase px-1.5 py-0.5 border ${
+                                        isSelected
+                                          ? "border-[#FAF7F0] text-[#FAF7F0]"
+                                          : isAegis
+                                          ? "border-[#1846C7] text-[#1846C7]"
+                                          : "border-[#C84B15] text-[#C84B15]"
+                                      }`}
+                                    >
+                                      {isAegis ? "AEGIS AI" : "VANGUARD AI"}
+                                    </span>
+                                  </div>
+
+                                  <div className="mt-2.5 flex items-center justify-between font-mono-tech text-[11px]">
+                                    <span>
+                                      [
+                                      {Array.from({ length: 5 }, (_, s) =>
+                                        s < count ? "■" : "·"
+                                      ).join("")}
+                                      ] {count}/5 SEATED
+                                    </span>
+                                    {isSelected && (
+                                      <span className="uppercase font-bold underline">
+                                        [SELECTED]
+                                      </span>
+                                    )}
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t-2 border-[#121211] flex flex-wrap items-center justify-between gap-4">
+                    <div className="font-mono-tech text-xs">
+                      REGISTERING FOR:{" "}
+                      <strong>
+                        TABLE {pad2(selectedTable)} (ARENA{" "}
+                        {pad2(getTableArenaNumber(selectedTable))} //{" "}
+                        {LAB_PROFILES[
+                          getTableLabId(selectedTable)
+                        ].name.toUpperCase()}
+                        )
+                      </strong>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={submitting || !joinName.trim()}
+                      className="px-6 py-3.5 border-2 border-[#121211] bg-[#C8322B] hover:bg-[#a8251f] disabled:opacity-40 text-[#FAF7F0] font-mono-tech text-xs uppercase tracking-widest font-bold transition cursor-pointer shadow-[3px_3px_0px_#121211]"
+                    >
+                      Confirm Seat &amp; Open Dossier →
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
         ) : state.phase === "lobby" ? (
-          /* VIEW 2: LOBBY & ROLE BRIEFING VIEW */
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Lab Dossier Card */}
-              <div className="lg:col-span-2 rounded-2xl border border-slate-800 bg-slate-900/70 p-6">
-                <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-                  <span
-                    className={`text-xs font-mono uppercase px-2.5 py-1 rounded-full border ${
-                      currentPlayer.labId === "aegis"
-                        ? "bg-sky-500/15 text-sky-300 border-sky-500/30"
-                        : "bg-amber-500/15 text-amber-300 border-amber-500/30"
-                    }`}
-                  >
-                    Arena {currentPlayer.arenaNumber} • Table{" "}
-                    {currentPlayer.tableNumber} vs. Table {rivalTableNumber}
-                  </span>
-                  <span className="text-xs font-mono text-slate-400">
-                    Waiting for Game Master to Launch Act I...
-                  </span>
-                </div>
+          /* ===================================================================
+             VIEW 2: PRE-INCIDENT BRIEFING FOLDER & TABLE ROSTER
+             =================================================================== */
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Left 8 Columns: Lab Intelligence File & Role Clearance */}
+            <div className="lg:col-span-8 dossier-sheet">
+              <div className="border-b-2 border-[#121211] bg-[#E6DFD1] px-6 py-3 flex flex-wrap items-center justify-between gap-2 font-mono-tech text-xs uppercase">
+                <span>
+                  LAB DOSSIER // TABLE {pad2(currentPlayer.tableNumber)} (ARENA{" "}
+                  {pad2(currentPlayer.arenaNumber)})
+                </span>
+                <span>OPPOSING TABLE: TABLE {pad2(rivalTableNumber || 0)}</span>
+              </div>
 
-                <h2 className="text-2xl font-bold text-white">
-                  {LAB_PROFILES[currentPlayer.labId].name}
-                </h2>
-                <p className="text-sm text-cyan-300 font-medium mt-0.5">
-                  {LAB_PROFILES[currentPlayer.labId].tagline}
-                </p>
-                <p className="mt-3 text-sm text-slate-300 leading-relaxed">
-                  {LAB_PROFILES[currentPlayer.labId].backgroundBrief}
-                </p>
-
-                {/* Starting Lab Metrics */}
-                <div className="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {[
-                    {
-                      label: "Security Posture",
-                      val: myTable?.currentMetrics.security ?? 50,
-                      color: "text-cyan-400",
-                    },
-                    {
-                      label: "AI Capability",
-                      val: myTable?.currentMetrics.capability ?? 50,
-                      color: "text-purple-400",
-                    },
-                    {
-                      label: "Public Trust",
-                      val: myTable?.currentMetrics.trust ?? 50,
-                      color: "text-emerald-400",
-                    },
-                    {
-                      label: "Market Growth",
-                      val: myTable?.currentMetrics.growth ?? 50,
-                      color: "text-amber-400",
-                    },
-                  ].map((m) => (
-                    <div
-                      key={m.label}
-                      className="p-3 rounded-xl bg-slate-950/80 border border-slate-800"
+              <div className="p-6 sm:p-8 space-y-8">
+                <div>
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <span
+                      className={`stamp-badge ${
+                        currentPlayer.labId === "aegis"
+                          ? "text-[#1846C7]"
+                          : "text-[#C84B15]"
+                      }`}
                     >
-                      <div className="text-[11px] font-mono uppercase text-slate-400">
-                        {m.label}
-                      </div>
-                      <div className={`text-xl font-bold mt-1 ${m.color}`}>
-                        {m.val}
-                      </div>
-                    </div>
-                  ))}
+                      {LAB_PROFILES[currentPlayer.labId].name}
+                    </span>
+                    <span className="font-mono-tech text-xs text-[#57534E] uppercase">
+                      // {LAB_PROFILES[currentPlayer.labId].tagline}
+                    </span>
+                  </div>
+
+                  <h2 className="text-2xl sm:text-3xl font-bold uppercase tracking-tight mt-2">
+                    Laboratory Operational Profile
+                  </h2>
+                  <p className="font-editorial text-lg leading-relaxed text-[#262523] mt-2">
+                    {LAB_PROFILES[currentPlayer.labId].backgroundBrief}
+                  </p>
                 </div>
 
-                {/* Assigned Role Dossier */}
-                <div className="mt-6 pt-6 border-t border-slate-800">
+                {/* Horizontal Metric Bar Gauges */}
+                <div className="border-t-2 border-b-2 border-[#121211] py-5">
+                  <div className="font-mono-tech text-xs uppercase tracking-wider font-bold mb-4">
+                    § 2.1 — Baseline Laboratory Posture Indices (Scale 0–100)
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {[
+                      {
+                        code: "SEC-INDEX",
+                        label: "Security Posture (SOC)",
+                        val: myTable?.currentMetrics.security ?? 50,
+                      },
+                      {
+                        code: "CAP-INDEX",
+                        label: "Model Capability & Velocity",
+                        val: myTable?.currentMetrics.capability ?? 50,
+                      },
+                      {
+                        code: "TRU-INDEX",
+                        label: "Public & Regulatory Trust",
+                        val: myTable?.currentMetrics.trust ?? 50,
+                      },
+                      {
+                        code: "GRO-INDEX",
+                        label: "Commercial Market Growth",
+                        val: myTable?.currentMetrics.growth ?? 50,
+                      },
+                    ].map((m) => (
+                      <div
+                        key={m.code}
+                        className="p-3.5 border border-[#121211] bg-[#F2EDE2]"
+                      >
+                        <div className="flex items-center justify-between font-mono-tech text-xs">
+                          <span className="uppercase font-semibold">
+                            {m.label}
+                          </span>
+                          <span className="font-bold text-sm">{m.val}/100</span>
+                        </div>
+                        <div className="mt-2 h-2.5 w-full border border-[#121211] bg-[#FAF7F0]">
+                          <div
+                            className="h-full bg-[#121211]"
+                            style={{ width: `${m.val}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Operative Role Assignment Clearance */}
+                <div>
                   <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-                    <h3 className="text-sm font-mono uppercase tracking-wider text-slate-300">
-                      Your Assigned Executive / SOC Role
-                    </h3>
-                    <div className="flex items-center gap-2 text-xs">
-                      <span className="text-slate-400">Need to swap roles at table?</span>
+                    <div className="font-mono-tech text-xs uppercase tracking-wider font-bold">
+                      § 2.2 — Your Assigned Specialist Clearance
+                    </div>
+                    <div className="flex items-center gap-2 font-mono-tech text-xs">
+                      <label htmlFor="swap-role-lobby" className="text-[#57534E]">
+                        REASSIGN SEAT:
+                      </label>
                       <select
-                        aria-label="Swap role at table"
+                        id="swap-role-lobby"
                         value={currentPlayer.roleId || ""}
                         onChange={(e) =>
                           handleRoleChange(e.target.value as RoleId)
                         }
-                        className="px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-700 text-slate-200 text-xs"
+                        className="px-2.5 py-1 border border-[#121211] bg-[#F2EDE2] text-xs font-mono-tech uppercase"
                       >
                         <option value="" disabled>
-                          Select role...
+                          [AWAITING ASSIGNMENT]
                         </option>
                         {ROLES.map((r) => (
                           <option key={r.id} value={r.id}>
@@ -579,22 +664,21 @@ export default function StudentSimulatorPage() {
                         (r) => r.id === currentPlayer.roleId
                       )!;
                       return (
-                        <div className="p-4 rounded-xl bg-slate-950 border border-cyan-500/30">
-                          <div className="flex items-center gap-2.5">
-                            {ROLE_ICON_MAP[roleDef.id]}
-                            <span className="text-lg font-bold text-white">
+                        <div className="border-2 border-[#121211] bg-[#F2EDE2] p-5 space-y-3">
+                          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#121211] pb-2">
+                            <span className="font-bold text-lg uppercase">
                               {roleDef.title}
                             </span>
-                            <span className="text-xs font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300">
-                              {roleDef.department}
+                            <span className="stamp-badge text-[#121211]">
+                              DEPT // {roleDef.department}
                             </span>
                           </div>
-                          <p className="mt-2 text-sm text-slate-300">
+                          <p className="text-sm leading-relaxed text-[#262523]">
                             {roleDef.missionSummary}
                           </p>
-                          <div className="mt-3 p-3 rounded-lg bg-slate-900/90 border border-slate-800 text-xs text-slate-400">
-                            <strong className="text-cyan-300">
-                              Real-World Industry Role:
+                          <div className="p-3 bg-[#FAF7F0] border border-[#121211] font-mono-tech text-xs text-[#44403C]">
+                            <strong className="text-[#121211] uppercase">
+                              Operational Context:
                             </strong>{" "}
                             {roleDef.realWorldParallel}
                           </div>
@@ -602,131 +686,130 @@ export default function StudentSimulatorPage() {
                       );
                     })()
                   ) : (
-                    <div className="p-4 rounded-xl bg-slate-950/70 border border-dashed border-slate-700 text-sm text-slate-300">
-                      Waiting for the Game Master to click{" "}
-                      <strong className="text-cyan-300">
-                        &ldquo;Auto-Assign Roles&rdquo;
-                      </strong>{" "}
-                      (or you can manually pick your role above if your table is ready).
+                    <div className="border-2 border-dashed border-[#121211] p-6 bg-[#F2EDE2] font-mono-tech text-xs uppercase leading-relaxed">
+                      [ STANDING BY FOR GAME MASTER ROLE DISTRIBUTION — OR USE THE DROPDOWN ABOVE TO CLAIM YOUR DEPARTMENT SEAT AT THE TABLE. ]
                     </div>
                   )}
                 </div>
               </div>
+            </div>
 
-              {/* Table Roster Card */}
-              <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 flex flex-col justify-between">
-                <div>
-                  <h3 className="text-base font-bold text-white flex items-center justify-between">
-                    <span>Table {currentPlayer.tableNumber} Roster</span>
-                    <span className="text-xs font-mono text-cyan-400">
-                      {myTable?.players.length || 0} / 5 Players
-                    </span>
-                  </h3>
-                  <p className="text-xs text-slate-400 mt-1">
-                    Introduce yourselves at your physical table! Each role receives different forensic logs during each Act.
-                  </p>
+            {/* Right 4 Columns: Table Seat Ledger & Protocol Manual */}
+            <div className="lg:col-span-4 space-y-6">
+              <div className="dossier-sheet">
+                <div className="border-b-2 border-[#121211] bg-[#E6DFD1] px-5 py-3 flex items-center justify-between font-mono-tech text-xs uppercase">
+                  <span>TABLE {pad2(currentPlayer.tableNumber)} SEAT LEDGER</span>
+                  <span>{myTable?.players.length || 0}/5 SEATED</span>
+                </div>
 
-                  <div className="mt-4 space-y-2.5">
-                    {myTable?.players.map((p) => {
-                      const rDef = ROLES.find((r) => r.id === p.roleId);
-                      return (
-                        <div
-                          key={p.id}
-                          className={`p-3 rounded-xl border flex items-center justify-between ${
-                            p.id === currentPlayer.id
-                              ? "bg-cyan-500/10 border-cyan-500/40"
-                              : "bg-slate-950/70 border-slate-800"
-                          }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-sm text-white">
-                              {p.name}
-                            </span>
-                            {p.id === currentPlayer.id && (
-                              <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300">
-                                You
-                              </span>
-                            )}
+                <div className="divide-y divide-[#121211]">
+                  {myTable?.players.map((p, idx) => {
+                    const rDef = ROLES.find((r) => r.id === p.roleId);
+                    const isMe = p.id === currentPlayer.id;
+                    return (
+                      <div
+                        key={p.id}
+                        className={`p-4 flex items-center justify-between font-mono-tech text-xs ${
+                          isMe ? "bg-[#F2EDE2]" : "bg-[#FAF7F0]"
+                        }`}
+                      >
+                        <div>
+                          <div className="text-[10px] text-[#57534E]">
+                            SEAT 0{idx + 1} {isMe ? "// [YOU]" : ""}
                           </div>
-                          <div className="flex items-center gap-1.5 text-xs">
-                            {rDef ? (
-                              <>
-                                {ROLE_ICON_MAP[rDef.id]}
-                                <span className="text-slate-200 font-medium">
-                                  {rDef.shortTitle}
-                                </span>
-                              </>
-                            ) : (
-                              <span className="text-slate-500 italic">
-                                Pending Role
-                              </span>
-                            )}
+                          <div className="font-bold text-sm text-[#121211] uppercase">
+                            {p.name}
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
+                        <span className="px-2 py-1 border border-[#121211] bg-[#FAF7F0] uppercase font-semibold text-[11px]">
+                          {rDef ? rDef.shortTitle : "UNASSIGNED"}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
+              </div>
 
-                <div className="mt-6 p-4 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-400 space-y-1.5">
-                  <div className="font-semibold text-slate-200 flex items-center gap-1.5">
-                    <BookOpen className="w-4 h-4 text-cyan-400" />
-                    How Each Act Works (No Luck / No Dice):
-                  </div>
-                  <p>
-                    1. Read your secret department log & share clues out loud with your table.
-                  </p>
-                  <p>
-                    2. Lock in your individual <strong>Department Action</strong> + vote on one <strong>Official Table Strategy</strong>.
-                  </p>
-                  <p>
-                    3. One of the <strong>3 Roaming Admins</strong> will visit your Arena to read out the results and unlock your new score!
-                  </p>
+              <div className="dossier-sheet p-5 space-y-3">
+                <div className="font-mono-tech text-xs uppercase tracking-wider font-bold border-b border-[#121211] pb-2">
+                  Exercise Protocol (3 Acts)
                 </div>
+                <ol className="space-y-2.5 text-xs leading-relaxed text-[#262523] list-decimal list-inside font-mono-tech">
+                  <li>
+                    <strong>Inspect Department Intercepts:</strong> Every seat at your table receives different SIEM logs, model traces, or legal memos. Read yours aloud to your table.
+                  </li>
+                  <li>
+                    <strong>File Individual &amp; Table Directives:</strong> Each specialist files 1 Department Directive; the table ratifies 1 Joint Resolution.
+                  </li>
+                  <li>
+                    <strong>Field Admin Debrief:</strong> One of the 3 Field Admins will walk to your Arena, read the outcome assessment aloud, and declassify your updated scores.
+                  </li>
+                </ol>
               </div>
             </div>
           </div>
         ) : state.phase === "debrief" ? (
-          /* VIEW 4: FINAL GLOBAL DEBRIEF & LEADERBOARD */
-          <div className="space-y-6">
-            <div className="rounded-2xl border border-cyan-500/40 bg-gradient-to-br from-slate-900 via-slate-900 to-cyan-950/40 p-6 sm:p-8">
-              <div className="flex flex-wrap items-center justify-between gap-4">
+          /* ===================================================================
+             VIEW 4: DECLASSIFIED FINAL EXERCISE AFTER-ACTION REPORT
+             =================================================================== */
+          <div className="dossier-sheet">
+            <div className="border-b-2 border-[#121211] bg-[#121211] text-[#FAF7F0] px-6 py-4 flex flex-wrap items-center justify-between gap-4 font-mono-tech text-xs uppercase">
+              <span>DECLASSIFIED // FINAL AFTER-ACTION REPORT (ACTS I–III)</span>
+              <span>
+                ARENA {pad2(currentPlayer.arenaNumber)} // TABLE{" "}
+                {pad2(currentPlayer.tableNumber)} VS. TABLE{" "}
+                {pad2(rivalTableNumber || 0)}
+              </span>
+            </div>
+
+            <div className="p-6 sm:p-8 space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-b-2 border-[#121211] pb-6">
                 <div>
-                  <span className="inline-flex items-center gap-1.5 text-xs font-mono uppercase px-2.5 py-1 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                    <Award className="w-3.5 h-3.5" /> Simulation Complete — Final Debrief
+                  <span className="stamp-badge text-[#166534]">
+                    EXERCISE COMPLETE // FINAL TALLY
                   </span>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-white mt-2">
-                    Table {currentPlayer.tableNumber} ({myTable?.shortName}) Final Score:{" "}
-                    <span className="text-cyan-400">{myTable?.totalScore} pts</span>
+                  <h1 className="text-3xl sm:text-4xl font-bold uppercase tracking-tight mt-3">
+                    Table {pad2(currentPlayer.tableNumber)} ({myTable?.shortName}):{" "}
+                    {myTable?.totalScore} PTS
                   </h1>
-                  <p className="text-sm text-slate-300 mt-1">
-                    Arena {currentPlayer.arenaNumber} Matchup: Table{" "}
-                    {currentPlayer.tableNumber} ({myTable?.totalScore} pts) vs. Table{" "}
-                    {rivalTableNumber} ({rivalTable?.totalScore} pts)
+                  <p className="font-mono-tech text-xs text-[#57534E] uppercase mt-2">
+                    OPPOSING TABLE {pad2(rivalTableNumber || 0)} (
+                    {rivalTable?.shortName}): {rivalTable?.totalScore} PTS
                   </p>
+                </div>
+
+                <div className="grid grid-cols-4 border-2 border-[#121211] divide-x-2 divide-[#121211] bg-[#F2EDE2] font-mono-tech text-center">
+                  {[
+                    ["SECURITY", myTable?.currentMetrics.security],
+                    ["CAPABILITY", myTable?.currentMetrics.capability],
+                    ["TRUST", myTable?.currentMetrics.trust],
+                    ["GROWTH", myTable?.currentMetrics.growth],
+                  ].map(([lbl, val]) => (
+                    <div key={lbl} className="p-3 flex flex-col justify-center">
+                      <div className="text-[10px] text-[#57534E]">{lbl}</div>
+                      <div className="text-xl font-bold mt-1">{val}</div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {([1, 2, 3] as const).map((actNum) => {
                   const actDef = ACTS[actNum];
                   const res = myTable?.actResolutions[String(actNum)];
                   return (
                     <div
                       key={actNum}
-                      className="p-4 rounded-xl bg-slate-950/90 border border-slate-800 space-y-2"
+                      className="border-2 border-[#121211] bg-[#F2EDE2] p-5 space-y-3"
                     >
-                      <div className="text-xs font-mono text-cyan-400 uppercase">
-                        Act {actNum} Takeaway
+                      <div className="font-mono-tech text-xs uppercase font-bold text-[#C8322B]">
+                        ACT 0{actNum} // {actDef.subtitle}
                       </div>
-                      <div className="font-bold text-white text-sm">
-                        {actDef.title}
+                      <div className="font-bold text-base uppercase">
+                        {res?.teamDecisionTitle}
                       </div>
-                      <div className="text-xs text-slate-300">
-                        <strong>Your Strategy:</strong> {res?.teamDecisionTitle}
-                      </div>
-                      <p className="text-xs text-slate-400 leading-relaxed pt-1 border-t border-slate-800">
-                        {actDef.learningTakeawayBullets[0]}
+                      <p className="text-xs leading-relaxed text-[#262523]">
+                        {res?.socLesson}
                       </p>
                     </div>
                   );
@@ -735,7 +818,9 @@ export default function StudentSimulatorPage() {
             </div>
           </div>
         ) : (
-          /* VIEW 3: ACTIVE CRISIS ACT (ACT 1, ACT 2, ACT 3) */
+          /* ===================================================================
+             VIEW 3: ACTIVE CRISIS DOSSIER & DIRECTIVE BALLOT (ACTS I, II, III)
+             =================================================================== */
           (() => {
             const actDef = ACTS[currentActNumber];
             const effectiveRoleId: RoleId = currentPlayer.roleId || "cyber";
@@ -752,378 +837,348 @@ export default function StudentSimulatorPage() {
 
             return (
               <div className="space-y-6">
-                {/* SEV-1 Incident Alert Banner */}
-                <div className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-center gap-2.5 text-sm text-rose-200">
-                    <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0" />
-                    <span className="font-mono text-xs sm:text-sm font-semibold">
-                      {actDef.incidentAlertBanner}
-                    </span>
+                {/* Priority SEV-1 Flash Dispatch Wire */}
+                <div className="border-2 border-[#C8322B] bg-[#FAF7F0] shadow-[4px_4px_0px_#C8322B]">
+                  <div className="bg-[#C8322B] text-[#FAF7F0] px-4 py-1.5 flex flex-wrap items-center justify-between gap-2 font-mono-tech text-xs uppercase font-bold">
+                    <span>FLASH SITREP // {actDef.incidentAlertBanner}</span>
+                    <span>CASE PARALLEL: {actDef.realWorldInspiration}</span>
                   </div>
-                  <span className="text-xs font-mono text-rose-300">
-                    {actDef.realWorldInspiration}
-                  </span>
-                </div>
 
-                {/* Top Grid: Act Situation Briefing + Live Arena Scoreboard */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  <div className="lg:col-span-2 rounded-2xl border border-slate-800 bg-slate-900/70 p-6">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <span className="text-xs font-mono uppercase tracking-wider text-cyan-400">
-                        Act {currentActNumber} of 3 • Crisis Situation Briefing
-                      </span>
-                      <span className="text-xs font-mono px-2.5 py-1 rounded bg-slate-950 border border-slate-800 text-slate-300">
-                        Your Role: {roleDef.title}
-                      </span>
+                  {/* Arena Head-to-Head Strip + Submission Status */}
+                  <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x border-t border-[#121211] font-mono-tech text-xs">
+                    <div className="lg:col-span-4 p-3 flex items-center justify-between bg-[#F2EDE2]">
+                      <div>
+                        <span className="text-[10px] text-[#57534E] block">
+                          ARENA {pad2(currentPlayer.arenaNumber)} STANDINGS
+                        </span>
+                        <strong>
+                          T{pad2(currentPlayer.tableNumber)} ({myTable?.shortName}
+                          ): {myTable?.totalScore} PTS
+                        </strong>{" "}
+                        vs.{" "}
+                        <span>
+                          T{pad2(rivalTableNumber || 0)} ({rivalTable?.shortName}
+                          ): {rivalTable?.totalScore} PTS
+                        </span>
+                      </div>
                     </div>
-                    <h1 className="text-xl sm:text-2xl font-bold text-white mt-1">
-                      {actDef.title}
-                    </h1>
-                    <p className="text-sm text-slate-400">{actDef.subtitle}</p>
 
-                    <div className="mt-4 space-y-2.5 text-sm text-slate-200 leading-relaxed">
-                      {actDef.situationBriefing.map((para, idx) => (
-                        <p key={idx}>{para}</p>
+                    <div className="lg:col-span-5 p-3 grid grid-cols-4 gap-2 text-center bg-[#FAF7F0]">
+                      {[
+                        ["SEC", myTable?.currentMetrics.security],
+                        ["CAP", myTable?.currentMetrics.capability],
+                        ["TRU", myTable?.currentMetrics.trust],
+                        ["GRO", myTable?.currentMetrics.growth],
+                      ].map(([k, v]) => (
+                        <div key={k} className="border border-[#C8C0B0] py-1">
+                          <span className="text-[10px] text-[#57534E] block">
+                            {k}
+                          </span>
+                          <span className="font-bold text-sm">{v}</span>
+                        </div>
                       ))}
                     </div>
 
-                    {/* Educational SOC Field Note Box */}
-                    <div className="mt-5 p-4 rounded-xl bg-cyan-950/30 border border-cyan-500/30">
-                      <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-cyan-300 font-semibold">
-                        <BookOpen className="w-4 h-4" />
-                        {actDef.learningTakeawayTitle}
-                      </div>
-                      <ul className="mt-2 space-y-1.5 text-xs text-slate-300 list-disc list-inside">
-                        {actDef.learningTakeawayBullets.map((b, i) => (
-                          <li key={i}>{b}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-
-                  {/* Arena Head-to-Head Status Card */}
-                  <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 flex flex-col justify-between space-y-4">
-                    <div>
-                      <div className="flex items-center justify-between text-xs font-mono uppercase text-slate-400">
-                        <span>Arena {currentPlayer.arenaNumber} Matchup</span>
-                        <span>
-                          {isCurrentActUnlocked ? (
-                            <span className="text-emerald-400 flex items-center gap-1">
-                              <Unlock className="w-3.5 h-3.5" /> Results Unlocked
-                            </span>
-                          ) : (
-                            <span className="text-amber-400 flex items-center gap-1">
-                              <Lock className="w-3.5 h-3.5" /> Active Round
-                            </span>
-                          )}
-                        </span>
-                      </div>
-
-                      <div className="mt-3 grid grid-cols-2 gap-3">
-                        <div className="p-3.5 rounded-xl bg-slate-950 border border-cyan-500/30">
-                          <div className="text-[11px] font-mono text-cyan-300">
-                            YOUR TABLE (T{currentPlayer.tableNumber})
-                          </div>
-                          <div className="font-bold text-white text-sm mt-0.5">
-                            {myTable?.shortName}
-                          </div>
-                          <div className="text-2xl font-extrabold text-white mt-2">
-                            {myTable?.totalScore}{" "}
-                            <span className="text-xs font-normal text-slate-400">
-                              pts
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800">
-                          <div className="text-[11px] font-mono text-slate-400">
-                            RIVAL TABLE (T{rivalTableNumber})
-                          </div>
-                          <div className="font-bold text-slate-200 text-sm mt-0.5">
-                            {rivalTable?.shortName}
-                          </div>
-                          <div className="text-2xl font-extrabold text-slate-300 mt-2">
-                            {rivalTable?.totalScore}{" "}
-                            <span className="text-xs font-normal text-slate-500">
-                              pts
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* 4 Live Metrics */}
-                      <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
-                        <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 flex justify-between">
-                          <span className="text-slate-400">Security:</span>
-                          <span className="font-mono font-bold text-cyan-400">
-                            {myTable?.currentMetrics.security}
-                          </span>
-                        </div>
-                        <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 flex justify-between">
-                          <span className="text-slate-400">Capability:</span>
-                          <span className="font-mono font-bold text-purple-400">
-                            {myTable?.currentMetrics.capability}
-                          </span>
-                        </div>
-                        <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 flex justify-between">
-                          <span className="text-slate-400">Public Trust:</span>
-                          <span className="font-mono font-bold text-emerald-400">
-                            {myTable?.currentMetrics.trust}
-                          </span>
-                        </div>
-                        <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800 flex justify-between">
-                          <span className="text-slate-400">Growth:</span>
-                          <span className="font-mono font-bold text-amber-400">
-                            {myTable?.currentMetrics.growth}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Table Submission Checklist */}
-                    <div className="pt-4 border-t border-slate-800 space-y-2">
-                      <div className="text-xs font-mono uppercase text-slate-400">
-                        Table {currentPlayer.tableNumber} Act {currentActNumber} Checklist
-                      </div>
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-slate-300">
-                          1. Your Department Action ({roleDef.shortTitle}):
-                        </span>
-                        {myChosenDeptOption ? (
-                          <span className="text-emerald-400 font-semibold flex items-center gap-1">
-                            <CheckCircle2 className="w-3.5 h-3.5" /> Locked In
-                          </span>
-                        ) : (
-                          <span className="text-amber-400">Pending</span>
-                        )}
-                      </div>
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-slate-300">
-                          2. Official Table Strategy:
-                        </span>
-                        {tableChosenDecision ? (
-                          <span className="text-emerald-400 font-semibold flex items-center gap-1">
-                            <CheckCircle2 className="w-3.5 h-3.5" /> Submitted
-                          </span>
-                        ) : (
-                          <span className="text-amber-400">Pending</span>
-                        )}
-                      </div>
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-slate-300">
-                          3. Roaming Admin Debrief:
-                        </span>
-                        {isCurrentActUnlocked ? (
-                          <span className="text-emerald-400 font-semibold flex items-center gap-1">
-                            <Unlock className="w-3.5 h-3.5" /> Unlocked!
-                          </span>
-                        ) : (
-                          <span className="text-slate-400">
-                            Waiting for Admin...
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Action Navigation Tabs */}
-                <div className="flex flex-wrap items-center gap-2 border-b border-slate-800 pb-3">
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab("role")}
-                    className={`px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 transition cursor-pointer ${
-                      activeTab === "role"
-                        ? "bg-cyan-500 text-slate-950 shadow-lg shadow-cyan-500/20"
-                        : "bg-slate-900 text-slate-300 hover:bg-slate-800"
-                    }`}
-                  >
-                    {ROLE_ICON_MAP[effectiveRoleId]}
-                    <span>1. My Department Intel & Action ({roleDef.shortTitle})</span>
-                    {myChosenDeptOption && (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-700" />
-                    )}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab("team")}
-                    className={`px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 transition cursor-pointer ${
-                      activeTab === "team"
-                        ? "bg-cyan-500 text-slate-950 shadow-lg shadow-cyan-500/20"
-                        : "bg-slate-900 text-slate-300 hover:bg-slate-800"
-                    }`}
-                  >
-                    <Users className="w-4 h-4" />
-                    <span>2. Official Table Strategy (Team Vote)</span>
-                    {tableChosenDecision && (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-700" />
-                    )}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab("results")}
-                    className={`px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 transition cursor-pointer ${
-                      activeTab === "results"
-                        ? "bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20"
-                        : "bg-slate-900 text-slate-300 hover:bg-slate-800"
-                    }`}
-                  >
-                    {isCurrentActUnlocked ? (
-                      <Unlock className="w-4 h-4 text-emerald-400" />
-                    ) : (
-                      <Lock className="w-4 h-4 text-slate-400" />
-                    )}
-                    <span>
-                      3. Act {currentActNumber} Debrief & Score Breakdown
-                    </span>
-                  </button>
-                </div>
-
-                {/* TAB 1: ROLE-SPECIFIC INTEL & DEPARTMENT ACTION */}
-                {activeTab === "role" && (
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    <div className="lg:col-span-5 rounded-2xl border border-slate-800 bg-slate-900/70 p-6 space-y-4">
+                    <div className="lg:col-span-3 p-3 flex flex-col justify-center bg-[#F2EDE2]">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-mono uppercase px-2.5 py-1 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
-                          {roleDef.department} Telemetry
-                        </span>
-                        <select
-                          aria-label="Switch active role view"
-                          value={effectiveRoleId}
-                          onChange={(e) =>
-                            handleRoleChange(e.target.value as RoleId)
+                        <span>DEPT DIRECTIVE:</span>
+                        <strong
+                          className={
+                            myChosenDeptOption
+                              ? "text-[#166534]"
+                              : "text-[#C8322B]"
                           }
-                          className="px-2 py-1 rounded bg-slate-950 border border-slate-700 text-xs text-slate-300"
                         >
-                          {ROLES.map((r) => (
-                            <option key={r.id} value={r.id}>
-                              Role: {r.shortTitle}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <h2 className="text-lg font-bold text-white">
-                        {roleContent.intelHeadline}
-                      </h2>
-                      <p className="text-sm text-slate-300 leading-relaxed">
-                        {roleContent.intelBody}
-                      </p>
-
-                      {roleContent.terminalSnippet && (
-                        <div className="rounded-xl bg-slate-950 border border-slate-800 p-4 font-mono text-xs text-emerald-300 overflow-x-auto whitespace-pre-wrap leading-relaxed">
-                          <div className="flex items-center gap-1.5 text-slate-500 pb-2 mb-2 border-b border-slate-800">
-                            <Terminal className="w-3.5 h-3.5" />
-                            <span>LIVE TELEMETRY STREAM</span>
-                          </div>
-                          {roleContent.terminalSnippet}
-                        </div>
-                      )}
-
-                      <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-200 leading-relaxed">
-                        <strong className="uppercase font-mono block text-amber-300 mb-1">
-                          Speak Up at Your Table:
+                          {myChosenDeptOption ? "[FILED]" : "[PENDING]"}
                         </strong>
-                        {roleContent.tablePrompt}
                       </div>
-                    </div>
-
-                    <div className="lg:col-span-7 rounded-2xl border border-slate-800 bg-slate-900/70 p-6 flex flex-col justify-between">
-                      <div>
-                        <h3 className="text-lg font-bold text-white">
-                          Select Your {roleDef.shortTitle} Action for Act{" "}
-                          {currentActNumber}
-                        </h3>
-                        <p className="text-xs text-slate-400 mt-1">
-                          Choose the action your department will execute right now. Once your whole table is ready, switch to Tab 2 to lock in your Lab&apos;s Official Strategy.
-                        </p>
-
-                        <div className="mt-4 space-y-3">
-                          {roleContent.options.map((opt, idx) => {
-                            const isPicked = myChosenDeptOption === opt.id;
-                            return (
-                              <button
-                                key={opt.id}
-                                type="button"
-                                disabled={submitting || isCurrentActUnlocked}
-                                onClick={() =>
-                                  handleSelectDepartmentAction(opt.id)
-                                }
-                                className={`w-full text-left p-4 rounded-xl border transition cursor-pointer ${
-                                  isPicked
-                                    ? "bg-cyan-500/15 border-cyan-400 ring-2 ring-cyan-400/30"
-                                    : "bg-slate-950/80 border-slate-800 hover:border-slate-700"
-                                }`}
-                              >
-                                <div className="flex items-start justify-between gap-3">
-                                  <div className="font-semibold text-sm text-white">
-                                    <span className="font-mono text-cyan-400 mr-2">
-                                      Option {String.fromCharCode(65 + idx)}:
-                                    </span>
-                                    {opt.label}
-                                  </div>
-                                  {isPicked && (
-                                    <span className="shrink-0 text-xs font-mono px-2.5 py-0.5 rounded-full bg-cyan-400 text-slate-950 font-bold">
-                                      Locked In
-                                    </span>
-                                  )}
-                                </div>
-                                <p className="mt-1.5 text-xs text-slate-400 leading-relaxed">
-                                  {opt.summary}
-                                </p>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      <div className="mt-6 pt-4 border-t border-slate-800 flex items-center justify-between">
-                        <span className="text-xs text-slate-400">
-                          {myChosenDeptOption
-                            ? "Your department action is saved! Now discuss the Official Table Strategy."
-                            : "Select one option above to lock in your department's move."}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => setActiveTab("team")}
-                          className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-cyan-300 flex items-center gap-1.5 cursor-pointer"
+                      <div className="flex items-center justify-between mt-1">
+                        <span>TABLE RESOLUTION:</span>
+                        <strong
+                          className={
+                            tableChosenDecision
+                              ? "text-[#166534]"
+                              : "text-[#C8322B]"
+                          }
                         >
-                          <span>Go to Official Table Strategy</span>
-                          <ChevronRight className="w-4 h-4" />
-                        </button>
+                          {tableChosenDecision ? "[RATIFIED]" : "[PENDING]"}
+                        </strong>
                       </div>
                     </div>
                   </div>
-                )}
+                </div>
 
-                {/* TAB 2: OFFICIAL TABLE STRATEGY (5-PERSON TEAM DECISION) */}
-                {activeTab === "team" && (
-                  <div className="space-y-6">
-                    <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6">
-                      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                {/* Folder Index Tabs + Main Dossier Sheet */}
+                <div>
+                  <div className="flex flex-wrap items-end gap-1.5 border-b-2 border-[#121211]">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("role")}
+                      className={`px-5 py-3 font-mono-tech text-xs uppercase tracking-wider font-bold border-t-2 border-l-2 border-r-2 border-[#121211] transition cursor-pointer ${
+                        activeTab === "role"
+                          ? "bg-[#FAF7F0] text-[#121211] -mb-[2px] pb-[14px]"
+                          : "bg-[#E6DFD1] text-[#57534E] hover:bg-[#FAF7F0]"
+                      }`}
+                    >
+                      [01] Department Intel &amp; Directive ({roleDef.shortTitle}){" "}
+                      {myChosenDeptOption ? "✓" : ""}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("team")}
+                      className={`px-5 py-3 font-mono-tech text-xs uppercase tracking-wider font-bold border-t-2 border-l-2 border-r-2 border-[#121211] transition cursor-pointer ${
+                        activeTab === "team"
+                          ? "bg-[#FAF7F0] text-[#121211] -mb-[2px] pb-[14px]"
+                          : "bg-[#E6DFD1] text-[#57534E] hover:bg-[#FAF7F0]"
+                      }`}
+                    >
+                      [02] Joint Table Resolution (5-Vote){" "}
+                      {tableChosenDecision ? "✓" : ""}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("results")}
+                      className={`px-5 py-3 font-mono-tech text-xs uppercase tracking-wider font-bold border-t-2 border-l-2 border-r-2 border-[#121211] transition cursor-pointer ${
+                        activeTab === "results"
+                          ? "bg-[#FAF7F0] text-[#121211] -mb-[2px] pb-[14px]"
+                          : isCurrentActUnlocked
+                          ? "bg-[#166534] text-[#FAF7F0]"
+                          : "bg-[#E6DFD1] text-[#57534E]"
+                      }`}
+                    >
+                      [03] After-Action Report{" "}
+                      {isCurrentActUnlocked ? "[DECLASSIFIED]" : "[SEALED]"}
+                    </button>
+                  </div>
+
+                  {/* TAB 01: DEPARTMENT INTEL & DIRECTIVE BALLOT */}
+                  {activeTab === "role" && (
+                    <div className="dossier-sheet border-t-0">
+                      {/* Top Situation Narrative & Field Manual Split */}
+                      <div className="grid grid-cols-1 lg:grid-cols-12 border-b-2 border-[#121211]">
+                        <div className="lg:col-span-7 p-6 sm:p-8 border-b lg:border-b-0 lg:border-r-2 border-[#121211]">
+                          <div className="font-mono-tech text-xs uppercase tracking-widest text-[#C8322B] font-bold">
+                            SITUATION DISPATCH // ACT 0{currentActNumber} OF 03
+                          </div>
+                          <h1 className="text-2xl sm:text-3xl font-bold uppercase tracking-tight mt-1">
+                            {actDef.title}
+                          </h1>
+                          <div className="mt-4 space-y-3 font-editorial text-lg leading-relaxed text-[#121211]">
+                            {actDef.situationBriefing.map((para, idx) => (
+                              <p key={idx}>{para}</p>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Annotated SOC Field Manual Box */}
+                        <div className="lg:col-span-5 p-6 sm:p-8 bg-[#F2EDE2] flex flex-col justify-between">
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between border-b border-[#121211] pb-2">
+                              <span className="stamp-badge text-[#121211]">
+                                SOC FIELD MANUAL // REFERENCE
+                              </span>
+                              <span className="font-mono-tech text-[11px] text-[#57534E]">
+                                SEC-EDU-0{currentActNumber}
+                              </span>
+                            </div>
+                            <h2 className="font-bold text-base uppercase leading-snug">
+                              {actDef.learningTakeawayTitle}
+                            </h2>
+                            <ul className="space-y-2.5 text-xs leading-relaxed text-[#262523]">
+                              {actDef.learningTakeawayBullets.map((b, i) => (
+                                <li
+                                  key={i}
+                                  className="pl-3 border-l-2 border-[#121211]"
+                                >
+                                  {b}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Bottom Split: Role Classified Intercept + Official Directive Ballot */}
+                      <div className="grid grid-cols-1 lg:grid-cols-12">
+                        {/* Left: Role-Specific Intercept & Raw Terminal Log */}
+                        <div className="lg:col-span-6 p-6 sm:p-8 border-b lg:border-b-0 lg:border-r-2 border-[#121211] space-y-5">
+                          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#121211] pb-3">
+                            <div>
+                              <div className="font-mono-tech text-[10px] uppercase text-[#57534E]">
+                                EYES ONLY // {roleDef.department}
+                              </div>
+                              <div className="font-bold text-base uppercase">
+                                {roleDef.title}
+                              </div>
+                            </div>
+
+                            <select
+                              aria-label="Switch specialist desk"
+                              value={effectiveRoleId}
+                              onChange={(e) =>
+                                handleRoleChange(e.target.value as RoleId)
+                              }
+                              className="px-2.5 py-1.5 border border-[#121211] bg-[#F2EDE2] font-mono-tech text-xs uppercase"
+                            >
+                              {ROLES.map((r) => (
+                                <option key={r.id} value={r.id}>
+                                  DESK: {r.shortTitle}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div>
+                            <h3 className="font-bold text-lg uppercase">
+                              {roleContent.intelHeadline}
+                            </h3>
+                            <p className="mt-2 text-sm leading-relaxed text-[#262523]">
+                              {roleContent.intelBody}
+                            </p>
+                          </div>
+
+                          {roleContent.terminalSnippet && (
+                            <div className="border-2 border-[#121211] bg-[#121211] text-[#F2EDE2] p-4 font-mono-tech text-xs overflow-x-auto">
+                              <div className="flex items-center justify-between text-[10px] text-[#A8A29E] border-b border-[#2E2D2A] pb-2 mb-3 uppercase">
+                                <span>RAW TELEMETRY INTERCEPT // {roleDef.id.toUpperCase()}_FEED</span>
+                                <span>UTF-8 // VERIFIED</span>
+                              </div>
+                              <pre className="whitespace-pre-wrap leading-relaxed text-[#E7E5E4]">
+                                {roleContent.terminalSnippet}
+                              </pre>
+                            </div>
+                          )}
+
+                          <div className="border-2 border-[#121211] bg-[#E6DFD1] p-4">
+                            <div className="font-mono-tech text-xs uppercase font-bold text-[#C8322B] mb-1">
+                              [MANDATORY TABLE BRIEFING CUE — READ ALOUD]:
+                            </div>
+                            <p className="text-xs leading-relaxed text-[#121211] font-medium">
+                              {roleContent.tablePrompt}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Right: Department Directive Ballot */}
+                        <div className="lg:col-span-6 p-6 sm:p-8 flex flex-col justify-between bg-[#FAF7F0]">
+                          <div className="space-y-4">
+                            <div className="border-b border-[#121211] pb-3">
+                              <div className="font-mono-tech text-[10px] uppercase text-[#57534E]">
+                                FORM 02-B // DEPARTMENTAL ACTION ORDER
+                              </div>
+                              <h3 className="font-bold text-lg uppercase">
+                                Authorize {roleDef.shortTitle} Directive
+                              </h3>
+                              <p className="text-xs text-[#57534E] mt-0.5">
+                                Mark one directive below. After all specialists at your table have filed, proceed to Tab [02] to ratify your Joint Table Resolution.
+                              </p>
+                            </div>
+
+                            <div className="space-y-3">
+                              {roleContent.options.map((opt, idx) => {
+                                const isPicked = myChosenDeptOption === opt.id;
+                                const code = `DIR-0${currentActNumber}-${String.fromCharCode(
+                                  65 + idx
+                                )}`;
+                                return (
+                                  <button
+                                    key={opt.id}
+                                    type="button"
+                                    disabled={
+                                      submitting || isCurrentActUnlocked
+                                    }
+                                    onClick={() =>
+                                      handleSelectDepartmentAction(opt.id)
+                                    }
+                                    className={`w-full text-left p-4 border-2 border-[#121211] transition cursor-pointer ${
+                                      isPicked
+                                        ? "bg-[#121211] text-[#FAF7F0] shadow-[3px_3px_0px_#C8322B]"
+                                        : "bg-[#F2EDE2] hover:bg-white text-[#121211]"
+                                    }`}
+                                  >
+                                    <div className="flex items-start justify-between gap-3 font-mono-tech text-xs">
+                                      <span className="font-bold uppercase">
+                                        [{isPicked ? "X" : " "}] {code}
+                                      </span>
+                                      {isPicked && (
+                                        <span className="px-2 py-0.5 bg-[#C8322B] text-[#FAF7F0] uppercase font-bold text-[10px]">
+                                          FILED &amp; STAMPED
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="font-bold text-sm mt-2 leading-snug">
+                                      {opt.label}
+                                    </div>
+                                    <p
+                                      className={`mt-1.5 text-xs leading-relaxed ${
+                                        isPicked
+                                          ? "text-[#D6D0C4]"
+                                          : "text-[#44403C]"
+                                      }`}
+                                    >
+                                      {opt.summary}
+                                    </p>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          <div className="mt-6 pt-4 border-t-2 border-[#121211] flex items-center justify-between">
+                            <span className="font-mono-tech text-xs uppercase text-[#57534E]">
+                              {myChosenDeptOption
+                                ? "STATUS: DIRECTIVE LOGGED"
+                                : "STATUS: AWAITING SELECTION"}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setActiveTab("team")}
+                              className="px-5 py-2.5 border-2 border-[#121211] bg-[#121211] text-[#FAF7F0] hover:bg-[#292826] font-mono-tech text-xs uppercase font-bold cursor-pointer"
+                            >
+                              Proceed to Tab [02] Table Ballot →
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* TAB 02: JOINT TABLE STRATEGY BALLOT */}
+                  {activeTab === "team" && (
+                    <div className="dossier-sheet border-t-0 p-6 sm:p-8 space-y-6">
+                      <div className="flex flex-wrap items-center justify-between gap-4 border-b-2 border-[#121211] pb-4">
                         <div>
-                          <h2 className="text-xl font-bold text-white">
-                            Table {currentPlayer.tableNumber} ({myTable?.shortName}) — Official Lab Strategy for Act {currentActNumber}
+                          <div className="font-mono-tech text-xs uppercase text-[#C8322B] font-bold">
+                            EXECUTIVE CONCENSUS BALLOT // TABLE{" "}
+                            {pad2(currentPlayer.tableNumber)} (
+                            {myTable?.shortName})
+                          </div>
+                          <h2 className="text-2xl font-bold uppercase tracking-tight mt-1">
+                            Ratify Official Lab Strategy for Act 0
+                            {currentActNumber}
                           </h2>
-                          <p className="text-xs text-slate-400 mt-1">
-                            Debate these 4 strategies out loud with all 5 roles at your table. Your choice directly interacts with what Table {rivalTableNumber} ({rivalTable?.shortName}) chooses across the Arena!
+                          <p className="text-xs text-[#44403C] mt-1">
+                            Debate these four options across all 5 roles at your physical table. Your table&apos;s resolution directly collides with Table{" "}
+                            {pad2(rivalTableNumber || 0)} ({rivalTable?.shortName}
+                            ) across Arena {pad2(currentPlayer.arenaNumber)}.
                           </p>
                         </div>
-                        <div className="text-xs font-mono px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300">
+
+                        <div className="stamp-badge text-[#121211]">
                           {tableChosenDecision
-                            ? "Table Strategy Submitted — Waiting for Admin Debrief"
-                            : "Awaiting Table Strategy Selection"}
+                            ? "RESOLUTION RATIFIED // AWAITING ADMIN"
+                            : "BALLOT OPEN"}
                         </div>
                       </div>
 
-                      {/* Department Readiness Strip */}
-                      <div className="mb-6 p-3.5 rounded-xl bg-slate-950 border border-slate-800">
-                        <div className="text-xs font-mono uppercase text-slate-400 mb-2">
-                          Table {currentPlayer.tableNumber} Department Action Status:
+                      {/* 5-Department Roll Call Strip */}
+                      <div className="border-2 border-[#121211] bg-[#F2EDE2] p-4">
+                        <div className="font-mono-tech text-xs uppercase font-bold mb-3">
+                          Table {pad2(currentPlayer.tableNumber)} Department Roll Call (Act 0{currentActNumber}):
                         </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 font-mono-tech text-xs">
                           {ROLES.map((r) => {
                             const rolePlayers =
                               myTable?.players.filter((p) => p.roleId === r.id) ||
@@ -1136,29 +1191,25 @@ export default function StudentSimulatorPage() {
                             return (
                               <div
                                 key={r.id}
-                                className={`p-2 rounded-lg border text-xs flex items-center justify-between ${
+                                className={`p-2.5 border border-[#121211] flex items-center justify-between ${
                                   hasSubmitted
-                                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
-                                    : "bg-slate-900 border-slate-800 text-slate-400"
+                                    ? "bg-[#121211] text-[#FAF7F0]"
+                                    : "bg-[#FAF7F0] text-[#57534E]"
                                 }`}
                               >
-                                <span className="font-medium">{r.shortTitle}</span>
-                                {hasSubmitted ? (
-                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                                ) : (
-                                  <span className="text-[10px] font-mono">
-                                    Pending
-                                  </span>
-                                )}
+                                <span className="font-bold uppercase">
+                                  {r.shortTitle}
+                                </span>
+                                <span>{hasSubmitted ? "[FILED]" : "[...]"}</span>
                               </div>
                             );
                           })}
                         </div>
                       </div>
 
-                      {/* 4 Team Decision Cards */}
+                      {/* 4 Macro Resolution Cards */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {actDef.teamDecisions.map((dec) => {
+                        {actDef.teamDecisions.map((dec, idx) => {
                           const isSelected = tableChosenDecision === dec.id;
                           return (
                             <button
@@ -1166,184 +1217,184 @@ export default function StudentSimulatorPage() {
                               type="button"
                               disabled={submitting || isCurrentActUnlocked}
                               onClick={() => handleSelectTeamDecision(dec.id)}
-                              className={`text-left p-5 rounded-xl border transition flex flex-col justify-between cursor-pointer ${
+                              className={`text-left p-5 border-2 border-[#121211] transition flex flex-col justify-between cursor-pointer ${
                                 isSelected
-                                  ? "bg-cyan-500/15 border-cyan-400 ring-2 ring-cyan-400/30"
-                                  : "bg-slate-950/90 border-slate-800 hover:border-slate-700"
+                                  ? "bg-[#121211] text-[#FAF7F0] shadow-[4px_4px_0px_#C8322B]"
+                                  : "bg-[#F2EDE2] hover:bg-white text-[#121211]"
                               }`}
                             >
                               <div>
-                                <div className="flex items-center justify-between gap-2 mb-2">
-                                  <span className="text-[11px] font-mono uppercase px-2 py-0.5 rounded bg-slate-800 text-cyan-300">
-                                    Stance: {dec.stance}
+                                <div className="flex items-center justify-between gap-2 pb-2 mb-3 border-b border-current/20 font-mono-tech text-xs uppercase">
+                                  <span className="font-bold">
+                                    [{isSelected ? "X" : " "}] RESOLUTION 0
+                                    {idx + 1} // POSTURE: {dec.stance}
                                   </span>
                                   {isSelected && (
-                                    <span className="text-xs font-mono px-2.5 py-0.5 rounded-full bg-cyan-400 text-slate-950 font-bold">
-                                      Official Table Choice
+                                    <span className="px-2 py-0.5 bg-[#C8322B] text-[#FAF7F0] font-bold text-[10px]">
+                                      RATIFIED BY TABLE
                                     </span>
                                   )}
                                 </div>
-                                <h3 className="text-base font-bold text-white">
+                                <h3 className="text-base font-bold uppercase leading-snug">
                                   {dec.title}
                                 </h3>
-                                <p className="mt-2 text-xs text-slate-300 leading-relaxed">
+                                <p
+                                  className={`mt-2 text-xs leading-relaxed ${
+                                    isSelected
+                                      ? "text-[#D6D0C4]"
+                                      : "text-[#44403C]"
+                                  }`}
+                                >
                                   {dec.subtitle}
                                 </p>
                               </div>
-                              <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-cyan-300 font-medium">
+
+                              <div className="mt-5 pt-3 border-t border-current/20 flex items-center justify-between font-mono-tech text-[11px] uppercase font-bold">
                                 <span>
                                   {isSelected
-                                    ? "Locked in for Table " +
-                                      currentPlayer.tableNumber
-                                    : "Click to lock in as Table Strategy"}
+                                    ? `LOCKED FOR TABLE ${pad2(
+                                        currentPlayer.tableNumber
+                                      )}`
+                                    : "CLICK TO RATIFY AS OFFICIAL TABLE STRATEGY"}
                                 </span>
-                                <ArrowRight className="w-3.5 h-3.5" />
+                                <span>→</span>
                               </div>
                             </button>
                           );
                         })}
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* TAB 3: ACT DEBRIEF & SCORE BREAKDOWN (LOCKED UNTIL ROAMING ADMIN UNLOCKS) */}
-                {activeTab === "results" && (
-                  <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6">
-                    {!isCurrentActUnlocked ? (
-                      <div className="py-12 text-center max-w-xl mx-auto space-y-4">
-                        <div className="w-14 h-14 rounded-2xl bg-amber-500/15 border border-amber-500/40 text-amber-400 flex items-center justify-center mx-auto">
-                          <Lock className="w-7 h-7" />
-                        </div>
-                        <h2 className="text-xl font-bold text-white">
-                          Act {currentActNumber} Results Are Locked Pending Admin Debrief
-                        </h2>
-                        <p className="text-sm text-slate-300 leading-relaxed">
-                          Once both tables in{" "}
-                          <strong className="text-white">
-                            Arena {currentPlayer.arenaNumber} (Tables{" "}
-                            {currentPlayer.tableNumber} & {rivalTableNumber})
-                          </strong>{" "}
-                          have locked in their choices, one of the{" "}
-                          <strong className="text-cyan-300">
-                            3 Roaming Admins
-                          </strong>{" "}
-                          will walk up to your Arena, read the crisis outcome summary out loud, and unlock your score breakdown!
-                        </p>
-                        <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-400">
-                          Table {currentPlayer.tableNumber} Status:{" "}
-                          <strong className="text-white">
-                            {tableChosenDecision
-                              ? "Ready for Admin Debrief"
-                              : "Still needs to lock in Official Table Strategy"}
-                          </strong>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-6">
-                        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
-                          <div>
-                            <span className="inline-flex items-center gap-1.5 text-xs font-mono uppercase px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-                              <Sparkles className="w-3.5 h-3.5" /> Admin Debrief Unlocked
-                            </span>
-                            <h2 className="text-xl font-bold text-white mt-2">
-                              Act {currentActNumber} Outcome Report — Table{" "}
-                              {currentPlayer.tableNumber} ({myTable?.shortName})
-                            </h2>
+                  {/* TAB 03: AFTER-ACTION REPORT (LOCKED UNTIL ROAMING ADMIN DECLASSIFIES) */}
+                  {activeTab === "results" && (
+                    <div className="dossier-sheet border-t-0 p-6 sm:p-8">
+                      {!isCurrentActUnlocked ? (
+                        <div className="max-w-2xl mx-auto py-12 text-center space-y-4">
+                          <div className="stamp-badge text-[#C8322B]">
+                            CLASSIFIED // EMBARGOED PENDING FIELD ADMIN REVIEW
                           </div>
-                          <div className="flex items-center gap-2">
-                            {(
-                              [
-                                ["Security", myResolution?.totalDelta.security],
-                                [
-                                  "Capability",
-                                  myResolution?.totalDelta.capability,
-                                ],
-                                ["Trust", myResolution?.totalDelta.trust],
-                                ["Growth", myResolution?.totalDelta.growth],
-                              ] as const
-                            ).map(([label, val]) => (
-                              <div
-                                key={label}
-                                className="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono"
-                              >
-                                <span className="text-slate-400">{label}: </span>
-                                <span
-                                  className={
-                                    (val || 0) >= 0
-                                      ? "text-emerald-400 font-bold"
-                                      : "text-rose-400 font-bold"
-                                  }
-                                >
-                                  {(val || 0) >= 0 ? `+${val}` : val}
-                                </span>
-                              </div>
-                            ))}
+                          <h2 className="text-2xl font-bold uppercase tracking-tight">
+                            Act 0{currentActNumber} After-Action Report Is Sealed
+                          </h2>
+                          <p className="font-editorial text-lg text-[#262523] leading-relaxed">
+                            Once both Table {pad2(currentPlayer.tableNumber)} and Table{" "}
+                            {pad2(rivalTableNumber || 0)} in{" "}
+                            <strong>
+                              Arena {pad2(currentPlayer.arenaNumber)}
+                            </strong>{" "}
+                            have ratified their resolutions, one of the{" "}
+                            <strong>3 Field Admins</strong> will approach your Arena, deliver the verbal outcome assessment, and declassify this report on your terminal.
+                          </p>
+                          <div className="p-4 border-2 border-[#121211] bg-[#F2EDE2] font-mono-tech text-xs uppercase">
+                            TABLE {pad2(currentPlayer.tableNumber)} STATUS:{" "}
+                            <strong>
+                              {tableChosenDecision
+                                ? "READY FOR FIELD ADMIN DEBRIEF"
+                                : "AWAITING JOINT TABLE RESOLUTION IN TAB [02]"}
+                            </strong>
                           </div>
                         </div>
-
-                        {/* Cross-Arena Narrative Summary */}
-                        {arenaDebrief && (
-                          <div className="p-5 rounded-xl bg-slate-950 border border-cyan-500/30 space-y-2">
-                            <div className="text-xs font-mono uppercase text-cyan-400">
-                              Arena {currentPlayer.arenaNumber} Collision Summary
+                      ) : (
+                        <div className="space-y-6">
+                          <div className="flex flex-wrap items-center justify-between gap-4 border-b-2 border-[#121211] pb-4">
+                            <div>
+                              <span className="stamp-badge text-[#166534]">
+                                DECLASSIFIED BY FIELD ADMIN // ARENA{" "}
+                                {pad2(currentPlayer.arenaNumber)}
+                              </span>
+                              <h2 className="text-2xl font-bold uppercase mt-2">
+                                Act 0{currentActNumber} After-Action Assessment — Table{" "}
+                                {pad2(currentPlayer.tableNumber)}
+                              </h2>
                             </div>
-                            <p className="text-sm text-slate-200 leading-relaxed">
-                              {arenaDebrief.readAloudScript.crossArenaCollision}
-                            </p>
-                            <p className="text-xs text-emerald-300 pt-2 border-t border-slate-800">
-                              <strong>SOC Lesson:</strong>{" "}
-                              {myResolution?.socLesson}
-                            </p>
-                          </div>
-                        )}
 
-                        {/* 5-Role Department Breakdown */}
-                        <div>
-                          <h3 className="text-sm font-mono uppercase tracking-wider text-slate-300 mb-3">
-                            How Each Role at Table {currentPlayer.tableNumber} Performed
-                          </h3>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {myResolution?.departmentBreakdown.map((dept) => (
-                              <div
-                                key={dept.roleId}
-                                className="p-4 rounded-xl bg-slate-950/90 border border-slate-800 space-y-1.5"
-                              >
-                                <div className="flex items-center justify-between">
-                                  <span className="font-bold text-sm text-white">
-                                    {dept.roleTitle}{" "}
-                                    {dept.playerNames.length > 0 && (
-                                      <span className="text-xs font-normal text-slate-400">
-                                        ({dept.playerNames.join(", ")})
-                                      </span>
-                                    )}
-                                  </span>
-                                  <span
-                                    className={`text-[11px] font-mono uppercase px-2 py-0.5 rounded ${
-                                      dept.evaluation === "optimal"
-                                        ? "bg-emerald-500/15 text-emerald-300"
-                                        : dept.evaluation === "risky"
-                                        ? "bg-rose-500/15 text-rose-300"
-                                        : "bg-amber-500/15 text-amber-300"
+                            <div className="grid grid-cols-4 border-2 border-[#121211] divide-x-2 divide-[#121211] bg-[#F2EDE2] font-mono-tech text-xs text-center">
+                              {(
+                                [
+                                  ["SEC", myResolution?.totalDelta.security],
+                                  ["CAP", myResolution?.totalDelta.capability],
+                                  ["TRU", myResolution?.totalDelta.trust],
+                                  ["GRO", myResolution?.totalDelta.growth],
+                                ] as const
+                              ).map(([label, val]) => (
+                                <div key={label} className="px-3 py-2">
+                                  <div className="text-[10px] text-[#57534E]">
+                                    {label}
+                                  </div>
+                                  <div
+                                    className={`font-bold text-sm ${
+                                      (val || 0) >= 0
+                                        ? "text-[#166534]"
+                                        : "text-[#C8322B]"
                                     }`}
                                   >
-                                    {dept.evaluation}
-                                  </span>
+                                    {(val || 0) >= 0 ? `+${val}` : val}
+                                  </div>
                                 </div>
-                                <div className="text-xs text-cyan-300 font-medium">
-                                  Choice: {dept.optionLabel}
-                                </div>
-                                <p className="text-xs text-slate-400 leading-relaxed">
-                                  {dept.debriefNote}
-                                </p>
+                              ))}
+                            </div>
+                          </div>
+
+                          {arenaDebrief && (
+                            <div className="border-2 border-[#121211] bg-[#F2EDE2] p-5 space-y-3">
+                              <div className="font-mono-tech text-xs uppercase font-bold text-[#1846C7]">
+                                ARENA {pad2(currentPlayer.arenaNumber)} CROSS-LAB COLLISION SUMMARY
                               </div>
-                            ))}
+                              <p className="font-editorial text-lg leading-relaxed text-[#121211]">
+                                {arenaDebrief.readAloudScript.crossArenaCollision}
+                              </p>
+                              <div className="pt-3 border-t border-[#121211] font-mono-tech text-xs text-[#166534]">
+                                <strong>POST-INCIDENT LESSON:</strong>{" "}
+                                {myResolution?.socLesson}
+                              </div>
+                            </div>
+                          )}
+
+                          <div>
+                            <div className="font-mono-tech text-xs uppercase font-bold mb-3">
+                              Departmental Directive Audit (Table{" "}
+                              {pad2(currentPlayer.tableNumber)})
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {myResolution?.departmentBreakdown.map((dept) => (
+                                <div
+                                  key={dept.roleId}
+                                  className="border-2 border-[#121211] bg-[#FAF7F0] p-4 space-y-2"
+                                >
+                                  <div className="flex items-center justify-between border-b border-[#121211] pb-2 font-mono-tech text-xs">
+                                    <span className="font-bold uppercase">
+                                      {dept.roleTitle}{" "}
+                                      {dept.playerNames.length > 0 &&
+                                        `// ${dept.playerNames.join(", ")}`}
+                                    </span>
+                                    <span
+                                      className={`px-2 py-0.5 border uppercase font-bold text-[10px] ${
+                                        dept.evaluation === "optimal"
+                                          ? "border-[#166534] text-[#166534] bg-[#166534]/10"
+                                          : dept.evaluation === "risky"
+                                          ? "border-[#C8322B] text-[#C8322B] bg-[#C8322B]/10"
+                                          : "border-[#121211] text-[#121211]"
+                                      }`}
+                                    >
+                                      {dept.evaluation}
+                                    </span>
+                                  </div>
+                                  <div className="font-bold text-xs uppercase">
+                                    DIRECTIVE: {dept.optionLabel}
+                                  </div>
+                                  <p className="text-xs text-[#44403C] leading-relaxed">
+                                    {dept.debriefNote}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                )}
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             );
           })()
