@@ -91,7 +91,7 @@ export default function RoamingAdminConsolePage() {
 
   if (!data) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-sm text-neutral-500">
+      <div className="min-h-screen flex items-center justify-center font-mono-tech text-xs uppercase tracking-widest text-[#57534E]">
         Loading...
       </div>
     );
@@ -104,24 +104,23 @@ export default function RoamingAdminConsolePage() {
   const actKey = String(selectedAct);
 
   return (
-    <div className="min-h-screen bg-neutral-50 text-neutral-900 pb-16">
-      {/* Minimal Header */}
-      <header className="bg-white border-b border-neutral-200 sticky top-0 z-20">
-        <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
+    <div className="min-h-screen pb-16">
+      {/* Minimal Dossier Header */}
+      <header className="bg-[#FAF7F0] border-b-2 border-[#121211] sticky top-0 z-20">
+        <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between font-mono-tech text-xs uppercase">
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="text-xs text-neutral-500 hover:text-neutral-900"
+              className="px-2.5 py-1 border border-[#121211] bg-[#F2EDE2] hover:bg-[#121211] hover:text-[#FAF7F0] font-bold transition"
             >
               ← Player View
             </Link>
-            <span className="text-neutral-300">|</span>
-            <span className="font-semibold text-sm">Admin Debrief</span>
+            <span className="font-bold text-sm">Admin Debrief</span>
           </div>
 
           <Link
             href="/gm"
-            className="text-xs font-medium text-neutral-500 hover:text-neutral-900"
+            className="px-2.5 py-1 border border-[#121211] bg-[#121211] text-[#FAF7F0] font-bold"
           >
             Host Dashboard →
           </Link>
@@ -130,7 +129,7 @@ export default function RoamingAdminConsolePage() {
 
       <main className="max-w-4xl mx-auto px-4 py-8 space-y-6">
         {/* Arena & Act Selector Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 font-mono-tech text-xs">
           <div className="flex flex-wrap gap-1.5">
             {[1, 2, 3, 4, 5].map((arenaNum) => {
               const pkg = data.arenaDebriefs[`${arenaNum}-${selectedAct}`];
@@ -140,20 +139,20 @@ export default function RoamingAdminConsolePage() {
                   key={arenaNum}
                   type="button"
                   onClick={() => setSelectedArena(arenaNum)}
-                  className={`px-3.5 py-2 rounded-xl text-xs font-medium border transition flex items-center gap-2 cursor-pointer ${
+                  className={`px-3.5 py-2 border-2 border-[#121211] uppercase font-bold transition flex items-center gap-2 cursor-pointer ${
                     isSelected
-                      ? "bg-neutral-900 text-white border-neutral-900"
-                      : "bg-white text-neutral-700 border-neutral-200 hover:bg-neutral-100"
+                      ? "bg-[#121211] text-[#FAF7F0]"
+                      : "bg-[#FAF7F0] text-[#121211] hover:bg-[#E6DFD1]"
                   }`}
                 >
                   <span>Arena {arenaNum}</span>
                   <span
                     className={`w-2 h-2 rounded-full ${
                       pkg.unlocked
-                        ? "bg-emerald-400"
+                        ? "bg-[#4ADE80]"
                         : pkg.bothTeamsSubmitted
-                        ? "bg-amber-400"
-                        : "bg-neutral-300"
+                        ? "bg-[#FACC15]"
+                        : "bg-[#A8A29E]"
                     }`}
                   />
                 </button>
@@ -161,16 +160,16 @@ export default function RoamingAdminConsolePage() {
             })}
           </div>
 
-          <div className="inline-flex p-1 rounded-xl bg-neutral-200/70 text-xs font-medium">
+          <div className="inline-flex border-2 border-[#121211] divide-x-2 divide-[#121211] bg-[#FAF7F0]">
             {([1, 2, 3] as const).map((actNum) => (
               <button
                 key={actNum}
                 type="button"
                 onClick={() => setSelectedAct(actNum)}
-                className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${
+                className={`px-3.5 py-2 uppercase font-bold transition cursor-pointer ${
                   selectedAct === actNum
-                    ? "bg-white text-neutral-900 shadow-2xs font-semibold"
-                    : "text-neutral-600"
+                    ? "bg-[#C8322B] text-[#FAF7F0]"
+                    : "text-[#121211] hover:bg-[#E6DFD1]"
                 }`}
               >
                 Act {actNum}
@@ -179,14 +178,14 @@ export default function RoamingAdminConsolePage() {
           </div>
         </div>
 
-        {/* Main Debrief Card */}
-        <div className="bg-white rounded-2xl border border-neutral-200 p-6 space-y-5">
-          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-neutral-100 pb-4">
+        {/* Main Debrief Dossier Sheet */}
+        <div className="dossier-sheet p-6 space-y-5">
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b-2 border-[#121211] pb-4">
             <div>
-              <span className="text-xs text-neutral-500">
+              <span className="stamp-badge text-[#121211]">
                 Arena {selectedArena} • Act {selectedAct}
               </span>
-              <h1 className="text-xl font-bold mt-0.5">
+              <h1 className="text-xl font-bold uppercase mt-2">
                 Table {oddTableNum} (Aegis) vs. Table {evenTableNum} (Vanguard)
               </h1>
             </div>
@@ -196,16 +195,16 @@ export default function RoamingAdminConsolePage() {
                 type="button"
                 disabled={busy}
                 onClick={() => handleToggleUnlockArena(true)}
-                className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition cursor-pointer"
+                className="px-5 py-3 border-2 border-[#121211] bg-[#166534] hover:bg-[#14532d] text-[#FAF7F0] font-mono-tech text-xs uppercase font-bold shadow-[3px_3px_0px_#121211] transition cursor-pointer"
               >
-                Unlock Results for Arena {selectedArena}
+                Unlock Results for Arena {selectedArena} →
               </button>
             ) : (
               <button
                 type="button"
                 disabled={busy}
                 onClick={() => handleToggleUnlockArena(false)}
-                className="px-4 py-2 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-xs font-medium transition cursor-pointer"
+                className="px-4 py-2 border-2 border-[#121211] bg-[#F2EDE2] hover:bg-[#121211] hover:text-[#FAF7F0] font-mono-tech text-xs uppercase font-bold transition cursor-pointer"
               >
                 Unlocked (Tap to Re-lock)
               </button>
@@ -213,25 +212,27 @@ export default function RoamingAdminConsolePage() {
           </div>
 
           {/* 3-Bullet Read-Aloud Summary */}
-          <div className="space-y-3 text-sm text-neutral-700 leading-relaxed">
-            <div className="text-xs font-semibold uppercase tracking-wider text-neutral-400">
-              Read Out Loud to Tables {oddTableNum} &amp; {evenTableNum}:
+          <div className="space-y-3">
+            <div className="font-mono-tech text-xs font-bold uppercase text-[#57534E]">
+              Read Aloud to Tables {oddTableNum} &amp; {evenTableNum}:
             </div>
-            <ul className="space-y-2.5">
-              <li className="p-3.5 rounded-xl bg-blue-50/60 border border-blue-100">
-                <strong className="text-blue-700">
+            <ul className="space-y-3 font-editorial text-lg leading-relaxed">
+              <li className="p-4 border-2 border-[#121211] bg-[#F2EDE2]">
+                <strong className="font-mono-tech text-xs uppercase text-[#1846C7] block mb-1">
                   Table {oddTableNum} (Aegis AI):
-                </strong>{" "}
+                </strong>
                 {debriefPkg.readAloudScript.aegisSummary}
               </li>
-              <li className="p-3.5 rounded-xl bg-orange-50/60 border border-orange-100">
-                <strong className="text-orange-700">
+              <li className="p-4 border-2 border-[#121211] bg-[#F2EDE2]">
+                <strong className="font-mono-tech text-xs uppercase text-[#C84B15] block mb-1">
                   Table {evenTableNum} (Vanguard AI):
-                </strong>{" "}
+                </strong>
                 {debriefPkg.readAloudScript.vanguardSummary}
               </li>
-              <li className="p-3.5 rounded-xl bg-neutral-50 border border-neutral-200">
-                <strong className="text-neutral-900">Takeaway:</strong>{" "}
+              <li className="p-4 border-2 border-[#121211] bg-[#FAF7F0]">
+                <strong className="font-mono-tech text-xs uppercase text-[#166534] block mb-1">
+                  Takeaway:
+                </strong>
                 {debriefPkg.readAloudScript.crossArenaCollision}
               </li>
             </ul>
@@ -248,32 +249,32 @@ export default function RoamingAdminConsolePage() {
             return (
               <div
                 key={tbl.tableNumber}
-                className="bg-white rounded-2xl border border-neutral-200 p-5 space-y-4"
+                className="dossier-sheet p-5 space-y-4"
               >
                 <div className="flex items-center justify-between">
                   <div>
                     <span
-                      className={`text-xs font-semibold ${
-                        isAegis ? "text-blue-600" : "text-orange-600"
+                      className={`font-mono-tech text-xs uppercase font-bold ${
+                        isAegis ? "text-[#1846C7]" : "text-[#C84B15]"
                       }`}
                     >
                       {tbl.shortName}
                     </span>
-                    <h2 className="text-base font-bold">
+                    <h2 className="text-lg font-bold uppercase">
                       Table {tbl.tableNumber} ({tbl.totalScore} pts)
                     </h2>
                   </div>
 
-                  {/* Simple Bonus Buttons */}
-                  <div className="flex items-center gap-1.5 text-xs">
-                    <span className="text-neutral-400 mr-1">
-                      Bonus: {currentBonus >= 0 ? `+${currentBonus}` : currentBonus}
+                  <div className="flex items-center gap-1.5 font-mono-tech text-xs">
+                    <span className="text-[#57534E] mr-1">
+                      Bonus:{" "}
+                      {currentBonus >= 0 ? `+${currentBonus}` : currentBonus}
                     </span>
                     <button
                       type="button"
                       disabled={busy}
                       onClick={() => handleAdjustBonus(tbl.tableNumber, -5)}
-                      className="px-2.5 py-1 rounded-lg border border-neutral-200 hover:bg-neutral-50 font-medium cursor-pointer"
+                      className="px-2.5 py-1 border border-[#121211] bg-[#F2EDE2] hover:bg-[#121211] hover:text-[#FAF7F0] font-bold cursor-pointer"
                     >
                       -5
                     </button>
@@ -281,37 +282,39 @@ export default function RoamingAdminConsolePage() {
                       type="button"
                       disabled={busy}
                       onClick={() => handleAdjustBonus(tbl.tableNumber, 5)}
-                      className="px-2.5 py-1 rounded-lg border border-neutral-200 hover:bg-neutral-50 font-medium cursor-pointer"
+                      className="px-2.5 py-1 border border-[#121211] bg-[#F2EDE2] hover:bg-[#121211] hover:text-[#FAF7F0] font-bold cursor-pointer"
                     >
                       +5
                     </button>
                   </div>
                 </div>
 
-                <div className="p-3 rounded-xl bg-neutral-50 border border-neutral-200 text-xs">
-                  <div className="text-neutral-400">Team Choice:</div>
-                  <div className="font-semibold text-neutral-900 mt-0.5">
+                <div className="p-3 border border-[#121211] bg-[#F2EDE2] font-mono-tech text-xs">
+                  <div className="text-[#57534E] uppercase text-[10px]">
+                    Team Choice:
+                  </div>
+                  <div className="font-bold uppercase mt-0.5">
                     {res.teamDecisionTitle}
                   </div>
                 </div>
 
-                <details className="text-xs text-neutral-500">
-                  <summary className="cursor-pointer font-medium text-neutral-600">
-                    View 5 individual role moves
+                <details className="font-mono-tech text-xs">
+                  <summary className="cursor-pointer font-bold uppercase text-[#57534E]">
+                    + View 5 individual role moves
                   </summary>
                   <div className="mt-2 space-y-1.5">
                     {res.departmentBreakdown.map((dept) => (
                       <div
                         key={dept.roleId}
-                        className="p-2.5 rounded-lg bg-neutral-50 border border-neutral-100 flex items-center justify-between gap-2"
+                        className="p-2.5 border border-[#121211] bg-[#F2EDE2] flex items-center justify-between gap-2"
                       >
                         <div>
-                          <span className="font-semibold text-neutral-800">
+                          <span className="font-bold uppercase">
                             {dept.roleTitle}:
                           </span>{" "}
                           <span>{dept.optionLabel}</span>
                         </div>
-                        <span className="uppercase text-[10px] font-semibold text-neutral-400 shrink-0">
+                        <span className="uppercase text-[10px] font-bold shrink-0">
                           {dept.evaluation}
                         </span>
                       </div>

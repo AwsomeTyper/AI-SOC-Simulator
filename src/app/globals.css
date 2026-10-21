@@ -1,9 +1,56 @@
 @import "tailwindcss";
 
+:root {
+  --paper-bg: #f2ede2;
+  --paper-sheet: #faf7f0;
+  --paper-muted: #e6dfd1;
+  --ink-black: #121211;
+  --ink-muted: #57534e;
+  --signal-red: #c8322b;
+  --aegis-blue: #1846c7;
+  --vanguard-orange: #c84b15;
+  --cleared-green: #166534;
+  --font-display: "Space Grotesk", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "IBM Plex Mono", "SF Mono", Menlo, monospace;
+  --font-serif: "Newsreader", Georgia, serif;
+}
+
 body {
-  background-color: #f9fafb;
-  color: #111827;
-  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+  background-color: var(--paper-bg);
+  color: var(--ink-black);
+  font-family: var(--font-display);
+}
+
+.font-mono-tech {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.font-editorial {
+  font-family: var(--font-serif);
+}
+
+.dossier-surface {
+  background-color: #f2ede2;
+  background-image: radial-gradient(#beb6a6 0.75px, transparent 0.75px);
+  background-size: 18px 18px;
+}
+
+.dossier-sheet {
+  background-color: #faf7f0;
+  border: 1.5px solid #121211;
+  box-shadow: 4px 4px 0px #121211;
+}
+
+.stamp-badge {
+  display: inline-block;
+  border: 1.5px solid currentColor;
+  padding: 0.1rem 0.45rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 /* Modern Web Guidance: responsive-table implementation */
@@ -12,9 +59,8 @@ body {
   max-inline-size: 100%;
   max-block-size: min(540px, 80vh);
   container-type: inline-size;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.75rem;
-  background: #ffffff;
+  border: 1.5px solid #121211;
+  background: #faf7f0;
 }
 
 .responsive-sim-table {
@@ -34,14 +80,14 @@ body {
   position: sticky;
   inset-block-start: 0;
   z-index: 2;
-  background: #f9fafb;
+  background: #e6dfd1;
 }
 
 .responsive-sim-table tbody th {
   position: sticky;
   inset-inline-start: 0;
   z-index: 1;
-  background: #ffffff;
+  background: #faf7f0;
 }
 
 @container (width < 600px) {
@@ -61,50 +107,49 @@ body {
 
   .responsive-sim-table tr {
     margin-block-end: 0.75rem;
-    border: 1px solid #e5e7eb;
-    border-radius: 0.5rem;
+    border: 1px solid #121211;
   }
 
   .responsive-sim-table tbody th {
     position: sticky;
     inset-block-start: 0;
     z-index: 2;
-    background: #f3f4f6;
+    background: #e6dfd1;
   }
 
   .responsive-sim-table td:nth-child(2)::before {
     content: var(--label-2) ": ";
     font-weight: 600;
-    color: #6b7280;
+    color: #57534e;
   }
   .responsive-sim-table td:nth-child(3)::before {
     content: var(--label-3) ": ";
     font-weight: 600;
-    color: #6b7280;
+    color: #57534e;
   }
   .responsive-sim-table td:nth-child(4)::before {
     content: var(--label-4) ": ";
     font-weight: 600;
-    color: #6b7280;
+    color: #57534e;
   }
   .responsive-sim-table td:nth-child(5)::before {
     content: var(--label-5) ": ";
     font-weight: 600;
-    color: #6b7280;
+    color: #57534e;
   }
   .responsive-sim-table td:nth-child(6)::before {
     content: var(--label-6) ": ";
     font-weight: 600;
-    color: #6b7280;
+    color: #57534e;
   }
   .responsive-sim-table td:nth-child(7)::before {
     content: var(--label-7) ": ";
     font-weight: 600;
-    color: #6b7280;
+    color: #57534e;
   }
   .responsive-sim-table td:nth-child(8)::before {
     content: var(--label-8) ": ";
     font-weight: 600;
-    color: #6b7280;
+    color: #57534e;
   }
 }

@@ -60,7 +60,7 @@ export default function GameMasterProjectorPage() {
 
   if (!data) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-sm text-neutral-500">
+      <div className="min-h-screen flex items-center justify-center font-mono-tech text-xs uppercase tracking-widest text-[#57534E]">
         Loading...
       </div>
     );
@@ -80,26 +80,25 @@ export default function GameMasterProjectorPage() {
     .reduce((sum, t) => sum + t.totalScore, 0);
 
   return (
-    <div className="min-h-screen bg-neutral-50 text-neutral-900 pb-16">
-      {/* Minimal Header */}
-      <header className="bg-white border-b border-neutral-200 sticky top-0 z-20">
-        <div className="max-w-6xl mx-auto px-4 h-14 flex flex-wrap items-center justify-between gap-4">
+    <div className="min-h-screen pb-16">
+      {/* Minimal Dossier Header */}
+      <header className="bg-[#FAF7F0] border-b-2 border-[#121211] sticky top-0 z-20">
+        <div className="max-w-6xl mx-auto px-4 h-14 flex flex-wrap items-center justify-between gap-4 font-mono-tech text-xs uppercase">
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="text-xs text-neutral-500 hover:text-neutral-900"
+              className="px-2.5 py-1 border border-[#121211] bg-[#F2EDE2] hover:bg-[#121211] hover:text-[#FAF7F0] font-bold transition"
             >
               ← Player View
             </Link>
-            <span className="text-neutral-300">|</span>
-            <span className="font-semibold text-sm">Host Dashboard</span>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-neutral-100 text-neutral-600">
-              {totalPlayers} players
+            <span className="font-bold text-sm">Host Dashboard</span>
+            <span className="stamp-badge text-[#121211]">
+              {totalPlayers} Players
             </span>
           </div>
 
-          <div className="flex items-center gap-2 text-xs">
-            <span className="font-mono font-bold text-sm px-3 py-1 rounded-lg bg-neutral-100">
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-sm px-3 py-1 border border-[#121211] bg-[#F2EDE2]">
               {formatTimer(state.timerSecondsRemaining)}
             </span>
             {!state.timerRunning ? (
@@ -108,9 +107,9 @@ export default function GameMasterProjectorPage() {
                 onClick={() =>
                   postAction({ action: "gm_timer_control", command: "start" })
                 }
-                className="px-3 py-1.5 rounded-lg bg-neutral-900 text-white font-medium cursor-pointer"
+                className="px-3 py-1.5 border border-[#121211] bg-[#166534] text-[#FAF7F0] font-bold uppercase cursor-pointer"
               >
-                Start Timer
+                Start
               </button>
             ) : (
               <button
@@ -118,7 +117,7 @@ export default function GameMasterProjectorPage() {
                 onClick={() =>
                   postAction({ action: "gm_timer_control", command: "pause" })
                 }
-                className="px-3 py-1.5 rounded-lg bg-amber-500 text-white font-medium cursor-pointer"
+                className="px-3 py-1.5 border border-[#121211] bg-[#C8322B] text-[#FAF7F0] font-bold uppercase cursor-pointer"
               >
                 Pause
               </button>
@@ -128,13 +127,13 @@ export default function GameMasterProjectorPage() {
               onClick={() =>
                 postAction({ action: "gm_timer_control", command: "reset" })
               }
-              className="px-2.5 py-1.5 rounded-lg border border-neutral-200 hover:bg-neutral-50 cursor-pointer"
+              className="px-2.5 py-1.5 border border-[#121211] bg-[#F2EDE2] hover:bg-white uppercase cursor-pointer"
             >
               Reset
             </button>
             <Link
               href="/admin"
-              className="ml-2 px-3 py-1.5 rounded-lg border border-neutral-200 hover:bg-neutral-50 font-medium"
+              className="ml-2 px-3 py-1.5 border border-[#121211] bg-[#121211] text-[#FAF7F0] font-bold"
             >
               Admin View →
             </Link>
@@ -144,8 +143,8 @@ export default function GameMasterProjectorPage() {
 
       <main className="max-w-6xl mx-auto px-4 py-8 space-y-6">
         {/* Phase Bar & Quick Host Actions */}
-        <div className="bg-white rounded-2xl border border-neutral-200 p-4 flex flex-wrap items-center justify-between gap-4">
-          <div className="inline-flex flex-wrap p-1 rounded-xl bg-neutral-100 text-xs font-medium gap-1">
+        <div className="dossier-sheet p-4 flex flex-wrap items-center justify-between gap-4 font-mono-tech text-xs">
+          <div className="inline-flex flex-wrap border-2 border-[#121211] divide-x-2 divide-[#121211] bg-[#F2EDE2]">
             {(
               [
                 { id: "lobby", label: "Lobby" },
@@ -164,10 +163,10 @@ export default function GameMasterProjectorPage() {
                   onClick={() =>
                     postAction({ action: "gm_set_phase", phase: p.id })
                   }
-                  className={`px-3.5 py-2 rounded-lg transition cursor-pointer ${
+                  className={`px-3.5 py-2 uppercase font-bold transition cursor-pointer ${
                     active
-                      ? "bg-neutral-900 text-white font-semibold"
-                      : "text-neutral-600 hover:text-neutral-900"
+                      ? "bg-[#121211] text-[#FAF7F0]"
+                      : "text-[#121211] hover:bg-white"
                   }`}
                 >
                   {p.label}
@@ -176,12 +175,12 @@ export default function GameMasterProjectorPage() {
             })}
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 text-xs">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               disabled={busy}
               onClick={() => postAction({ action: "gm_auto_assign_roles" })}
-              className="px-3 py-2 rounded-xl border border-neutral-200 hover:bg-neutral-50 font-medium cursor-pointer"
+              className="px-3 py-2 border border-[#121211] bg-[#F2EDE2] hover:bg-white uppercase font-bold cursor-pointer"
             >
               Assign Roles
             </button>
@@ -189,7 +188,7 @@ export default function GameMasterProjectorPage() {
               type="button"
               disabled={busy}
               onClick={() => postAction({ action: "gm_seed_demo" })}
-              className="px-3 py-2 rounded-xl border border-neutral-200 hover:bg-neutral-50 font-medium cursor-pointer"
+              className="px-3 py-2 border border-[#121211] bg-[#F2EDE2] hover:bg-white uppercase font-bold cursor-pointer"
             >
               Load 50 Demo Players
             </button>
@@ -206,7 +205,7 @@ export default function GameMasterProjectorPage() {
                       actNumber: currentActNumber,
                     })
                   }
-                  className="px-3 py-2 rounded-xl border border-neutral-200 hover:bg-neutral-50 font-medium cursor-pointer"
+                  className="px-3 py-2 border border-[#121211] bg-[#F2EDE2] hover:bg-white uppercase font-bold cursor-pointer"
                 >
                   Auto-Fill Choices
                 </button>
@@ -220,7 +219,7 @@ export default function GameMasterProjectorPage() {
                       unlocked: true,
                     })
                   }
-                  className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold cursor-pointer"
+                  className="px-3 py-2 border border-[#121211] bg-[#166534] text-[#FAF7F0] uppercase font-bold cursor-pointer"
                 >
                   Unlock All Arenas
                 </button>
@@ -234,7 +233,7 @@ export default function GameMasterProjectorPage() {
                   void postAction({ action: "gm_reset_all" });
                 }
               }}
-              className="px-3 py-2 rounded-xl text-red-600 hover:bg-red-50 font-medium cursor-pointer"
+              className="px-3 py-2 border border-[#C8322B] text-[#C8322B] hover:bg-[#C8322B] hover:text-[#FAF7F0] uppercase font-bold cursor-pointer"
             >
               Reset
             </button>
@@ -243,32 +242,34 @@ export default function GameMasterProjectorPage() {
 
         {/* Two Lab Totals */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="bg-white rounded-2xl border border-neutral-200 p-5 flex items-center justify-between">
+          <div className="dossier-sheet p-5 flex items-center justify-between">
             <div>
-              <span className="text-xs font-semibold text-blue-600">
+              <span className="font-mono-tech text-xs font-bold uppercase text-[#1846C7]">
                 Odd Tables (1, 3, 5, 7, 9)
               </span>
-              <h2 className="text-xl font-bold mt-0.5">Aegis AI</h2>
+              <h2 className="text-2xl font-bold uppercase mt-0.5">Aegis AI</h2>
             </div>
-            <div className="text-3xl font-extrabold text-blue-600">
+            <div className="font-mono-tech text-3xl font-extrabold text-[#1846C7]">
               {aegisAggregate}
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl border border-neutral-200 p-5 flex items-center justify-between">
+          <div className="dossier-sheet p-5 flex items-center justify-between">
             <div>
-              <span className="text-xs font-semibold text-orange-600">
+              <span className="font-mono-tech text-xs font-bold uppercase text-[#C84B15]">
                 Even Tables (2, 4, 6, 8, 10)
               </span>
-              <h2 className="text-xl font-bold mt-0.5">Vanguard AI</h2>
+              <h2 className="text-2xl font-bold uppercase mt-0.5">
+                Vanguard AI
+              </h2>
             </div>
-            <div className="text-3xl font-extrabold text-orange-600">
+            <div className="font-mono-tech text-3xl font-extrabold text-[#C84B15]">
               {vanguardAggregate}
             </div>
           </div>
         </div>
 
-        {/* 5 Arena Cards */}
+        {/* 5 Arena Dossier Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {[1, 2, 3, 4, 5].map((arenaNum) => {
             const [oddT, evenT] = getArenaTables(arenaNum);
@@ -277,19 +278,16 @@ export default function GameMasterProjectorPage() {
             const pkg = arenaDebriefs[`${arenaNum}-${currentActNumber}`];
 
             return (
-              <div
-                key={arenaNum}
-                className="bg-white rounded-2xl border border-neutral-200 p-4 space-y-3"
-              >
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-sm">Arena {arenaNum}</span>
+              <div key={arenaNum} className="dossier-sheet p-4 space-y-3">
+                <div className="flex items-center justify-between font-mono-tech text-xs border-b border-[#121211] pb-2">
+                  <span className="font-bold uppercase">Arena {arenaNum}</span>
                   <span
-                    className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${
+                    className={`uppercase font-bold text-[10px] ${
                       pkg?.unlocked
-                        ? "bg-emerald-50 text-emerald-700"
+                        ? "text-[#166534]"
                         : pkg?.bothTeamsSubmitted
-                        ? "bg-amber-50 text-amber-700"
-                        : "bg-neutral-100 text-neutral-500"
+                        ? "text-[#C8322B]"
+                        : "text-[#57534E]"
                     }`}
                   >
                     {pkg?.unlocked
@@ -308,24 +306,26 @@ export default function GameMasterProjectorPage() {
                   return (
                     <div
                       key={t.tableNumber}
-                      className="p-3 rounded-xl bg-neutral-50 border border-neutral-100 flex items-center justify-between"
+                      className="p-3 border border-[#121211] bg-[#F2EDE2] flex items-center justify-between"
                     >
                       <div>
-                        <div className="text-xs font-semibold">
+                        <div className="font-bold text-xs uppercase">
                           Table {t.tableNumber}{" "}
                           <span
                             className={
-                              isAegis ? "text-blue-600" : "text-orange-600"
+                              isAegis ? "text-[#1846C7]" : "text-[#C84B15]"
                             }
                           >
                             ({isAegis ? "Aegis" : "Vanguard"})
                           </span>
                         </div>
-                        <div className="text-[11px] text-neutral-400 mt-0.5">
+                        <div className="font-mono-tech text-[10px] text-[#57534E] uppercase mt-0.5">
                           {t.players.length}/5 • {done ? "Submitted" : "Open"}
                         </div>
                       </div>
-                      <div className="text-lg font-bold">{t.totalScore}</div>
+                      <div className="font-mono-tech text-lg font-bold">
+                        {t.totalScore}
+                      </div>
                     </div>
                   );
                 })}
@@ -335,9 +335,9 @@ export default function GameMasterProjectorPage() {
         </div>
 
         {/* Collapsible Detailed 10-Table Scoreboard */}
-        <details className="bg-white rounded-2xl border border-neutral-200 p-4">
-          <summary className="cursor-pointer text-xs font-semibold text-neutral-600">
-            View Detailed 10-Table Breakdown
+        <details className="dossier-sheet p-4 font-mono-tech text-xs">
+          <summary className="cursor-pointer font-bold uppercase">
+            + View Detailed 10-Table Breakdown
           </summary>
           <div
             tabIndex={0}
@@ -350,7 +350,7 @@ export default function GameMasterProjectorPage() {
                 All 10 Tables Scoreboard
               </caption>
               <thead>
-                <tr className="border-b border-neutral-200 text-neutral-500">
+                <tr className="border-b border-[#121211] uppercase text-[#57534E]">
                   <th className="py-2.5 px-3">Table</th>
                   <th className="py-2.5 px-3">Arena &amp; Lab</th>
                   <th className="py-2.5 px-3">Security</th>
@@ -361,7 +361,7 @@ export default function GameMasterProjectorPage() {
                   <th className="py-2.5 px-3 text-right">Score</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-100">
+              <tbody className="divide-y divide-[#121211]">
                 {Array.from({ length: 10 }, (_, i) => i + 1).map((tNum) => {
                   const t = computedTables[tNum];
                   const actLocked = Boolean(
@@ -372,10 +372,10 @@ export default function GameMasterProjectorPage() {
                   );
                   return (
                     <tr key={tNum}>
-                      <th className="py-2.5 px-3 font-semibold">
+                      <th className="py-2.5 px-3 font-bold uppercase">
                         Table {tNum} ({t.players.length}/5)
                       </th>
-                      <td className="py-2.5 px-3">
+                      <td className="py-2.5 px-3 uppercase">
                         Arena {t.arenaNumber} • {t.shortName}
                       </td>
                       <td className="py-2.5 px-3">
@@ -386,7 +386,7 @@ export default function GameMasterProjectorPage() {
                       </td>
                       <td className="py-2.5 px-3">{t.currentMetrics.trust}</td>
                       <td className="py-2.5 px-3">{t.currentMetrics.growth}</td>
-                      <td className="py-2.5 px-3">
+                      <td className="py-2.5 px-3 uppercase">
                         {actUnlocked
                           ? "Unlocked"
                           : actLocked

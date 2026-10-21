@@ -199,8 +199,8 @@ export default function StudentSimulatorPage() {
 
   if (!data) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-sm text-neutral-500">
-        Loading...
+      <div className="min-h-screen flex items-center justify-center font-mono-tech text-xs uppercase tracking-widest text-[#57534E]">
+        Loading Dossier...
       </div>
     );
   }
@@ -214,24 +214,28 @@ export default function StudentSimulatorPage() {
   const rivalTable = rivalTableNumber ? computedTables[rivalTableNumber] : null;
 
   return (
-    <div className="min-h-screen flex flex-col bg-neutral-50 text-neutral-900">
-      {/* Minimal Header */}
-      <header className="bg-white border-b border-neutral-200 sticky top-0 z-20">
+    <div className="min-h-screen flex flex-col">
+      {/* Minimal Dossier Top Bar */}
+      <header className="bg-[#FAF7F0] border-b-2 border-[#121211] sticky top-0 z-20">
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <span className="font-semibold text-sm tracking-tight">
+            <span className="font-bold text-sm uppercase tracking-tight">
               AI Crisis Sim
             </span>
             {currentPlayer && (
-              <span className="text-xs px-2.5 py-1 rounded-full bg-neutral-100 text-neutral-700 font-medium">
+              <span className="stamp-badge text-[#121211]">
                 Table {currentPlayer.tableNumber} •{" "}
                 {LAB_PROFILES[currentPlayer.labId].shortName}
               </span>
             )}
           </div>
 
-          <div className="flex items-center gap-3 text-xs">
-            <span className="font-mono font-semibold text-neutral-700 bg-neutral-100 px-2.5 py-1 rounded-md">
+          <div className="flex items-center gap-3 font-mono-tech text-xs">
+            <span
+              className={`font-bold px-2.5 py-1 border border-[#121211] bg-[#F2EDE2] ${
+                state.timerRunning ? "text-[#C8322B]" : "text-[#121211]"
+              }`}
+            >
               {formatTimer(state.timerSecondsRemaining)}
             </span>
 
@@ -239,7 +243,7 @@ export default function StudentSimulatorPage() {
               <button
                 type="button"
                 onClick={handleLeaveSession}
-                className="text-neutral-500 hover:text-neutral-900 cursor-pointer"
+                className="text-[#57534E] hover:text-[#121211] uppercase underline cursor-pointer"
               >
                 Leave
               </button>
@@ -247,13 +251,13 @@ export default function StudentSimulatorPage() {
 
             <Link
               href="/admin"
-              className="text-neutral-500 hover:text-neutral-900 font-medium"
+              className="px-2.5 py-1 border border-[#121211] bg-[#F2EDE2] hover:bg-[#121211] hover:text-[#FAF7F0] uppercase font-semibold transition"
             >
               Admin
             </Link>
             <Link
               href="/gm"
-              className="text-neutral-500 hover:text-neutral-900 font-medium"
+              className="px-2.5 py-1 border border-[#121211] bg-[#121211] text-[#FAF7F0] uppercase font-semibold transition"
             >
               Host
             </Link>
@@ -261,14 +265,14 @@ export default function StudentSimulatorPage() {
         </div>
       </header>
 
-      <main className="flex-1 max-w-3xl w-full mx-auto px-4 py-8">
+      <main className="flex-1 max-w-2xl w-full mx-auto px-4 py-8">
         {errorMsg && (
-          <div className="mb-6 p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center justify-between">
+          <div className="mb-6 p-3.5 border-2 border-[#C8322B] bg-[#FAF7F0] text-[#C8322B] font-mono-tech text-xs flex items-center justify-between">
             <span>{errorMsg}</span>
             <button
               type="button"
               onClick={() => setErrorMsg(null)}
-              className="font-medium underline cursor-pointer"
+              className="font-bold underline uppercase cursor-pointer"
             >
               Dismiss
             </button>
@@ -276,196 +280,198 @@ export default function StudentSimulatorPage() {
         )}
 
         {/* =========================================================
-            1. STARTING JOIN SCREEN (Minimal, ~30 words total)
+            1. STARTING JOIN SCREEN (Minimal Dossier Card)
            ========================================================= */}
         {!currentPlayer ? (
-          <div className="max-w-md mx-auto mt-4 bg-white rounded-2xl border border-neutral-200 p-6 sm:p-8 shadow-xs">
-            <h1 className="text-xl font-bold tracking-tight">
-              Join Your Table
-            </h1>
-            <p className="text-sm text-neutral-500 mt-1">
-              Enter your name and pick the table where you&apos;re sitting.
-            </p>
+          <div className="max-w-md mx-auto mt-4 dossier-sheet">
+            <div className="border-b-2 border-[#121211] bg-[#E6DFD1] px-6 py-2.5 font-mono-tech text-[11px] uppercase tracking-wider font-semibold">
+              Table Check-In
+            </div>
 
-            <form onSubmit={handleJoinTable} className="mt-6 space-y-5">
-              <div>
-                <label
-                  htmlFor="player-name"
-                  className="block text-xs font-medium text-neutral-700 mb-1.5"
-                >
-                  Your Name
-                </label>
-                <input
-                  id="player-name"
-                  type="text"
-                  required
-                  value={joinName}
-                  onChange={(e) => setJoinName(e.target.value)}
-                  placeholder="Alex Rivera"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 text-sm focus:outline-none focus:border-neutral-900"
-                />
-              </div>
+            <div className="p-6 sm:p-8">
+              <h1 className="text-2xl font-bold uppercase tracking-tight">
+                Join Your Table
+              </h1>
+              <p className="font-editorial text-base text-[#57534E] mt-1">
+                Enter your name and pick the table where you&apos;re sitting.
+              </p>
 
-              <div>
-                <label className="block text-xs font-medium text-neutral-700 mb-1.5">
-                  Table Number
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {Array.from({ length: 10 }, (_, i) => i + 1).map((tNum) => {
-                    const isAegis = getTableLabId(tNum) === "aegis";
-                    const count = computedTables[tNum].players.length;
-                    const isSelected = selectedTable === tNum;
+              <form onSubmit={handleJoinTable} className="mt-6 space-y-5">
+                <div>
+                  <label
+                    htmlFor="player-name"
+                    className="block font-mono-tech text-xs uppercase font-bold mb-1.5"
+                  >
+                    Your Name
+                  </label>
+                  <input
+                    id="player-name"
+                    type="text"
+                    required
+                    value={joinName}
+                    onChange={(e) => setJoinName(e.target.value)}
+                    placeholder="Alex Rivera"
+                    className="w-full px-3.5 py-2.5 border-2 border-[#121211] bg-[#F2EDE2] font-mono-tech text-sm focus:outline-none focus:bg-white"
+                  />
+                </div>
 
-                    return (
-                      <button
-                        key={tNum}
-                        type="button"
-                        onClick={() => setSelectedTable(tNum)}
-                        className={`p-3 rounded-xl border text-left transition flex items-center justify-between cursor-pointer ${
-                          isSelected
-                            ? "border-neutral-900 bg-neutral-900 text-white"
-                            : "border-neutral-200 bg-white hover:bg-neutral-50"
-                        }`}
-                      >
-                        <div>
-                          <div className="text-sm font-semibold">
-                            Table {tNum}
-                          </div>
-                          <div
-                            className={`text-[11px] ${
-                              isSelected
-                                ? "text-neutral-300"
-                                : isAegis
-                                ? "text-blue-600"
-                                : "text-orange-600"
-                            }`}
-                          >
-                            {isAegis ? "Aegis AI" : "Vanguard AI"}
-                          </div>
-                        </div>
-                        <span
-                          className={`text-xs ${
-                            isSelected ? "text-neutral-300" : "text-neutral-400"
+                <div>
+                  <label className="block font-mono-tech text-xs uppercase font-bold mb-1.5">
+                    Table Number
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {Array.from({ length: 10 }, (_, i) => i + 1).map((tNum) => {
+                      const isAegis = getTableLabId(tNum) === "aegis";
+                      const count = computedTables[tNum].players.length;
+                      const isSelected = selectedTable === tNum;
+
+                      return (
+                        <button
+                          key={tNum}
+                          type="button"
+                          onClick={() => setSelectedTable(tNum)}
+                          className={`p-3 border-2 border-[#121211] text-left transition flex items-center justify-between cursor-pointer ${
+                            isSelected
+                              ? "bg-[#121211] text-[#FAF7F0]"
+                              : "bg-[#F2EDE2] hover:bg-white text-[#121211]"
                           }`}
                         >
-                          {count}/5
-                        </span>
-                      </button>
-                    );
-                  })}
+                          <div>
+                            <div className="text-sm font-bold uppercase">
+                              Table {tNum}
+                            </div>
+                            <div
+                              className={`font-mono-tech text-[11px] uppercase ${
+                                isSelected
+                                  ? "text-[#D6D0C4]"
+                                  : isAegis
+                                  ? "text-[#1846C7]"
+                                  : "text-[#C84B15]"
+                              }`}
+                            >
+                              {isAegis ? "Aegis AI" : "Vanguard AI"}
+                            </div>
+                          </div>
+                          <span
+                            className={`font-mono-tech text-xs ${
+                              isSelected ? "text-[#FAF7F0]" : "text-[#57534E]"
+                            }`}
+                          >
+                            {count}/5
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
 
-              <button
-                type="submit"
-                disabled={submitting || !joinName.trim()}
-                className="w-full py-3 rounded-xl bg-neutral-900 hover:bg-neutral-800 disabled:opacity-40 text-white text-sm font-semibold transition cursor-pointer"
-              >
-                Join Table {selectedTable}
-              </button>
-            </form>
+                <button
+                  type="submit"
+                  disabled={submitting || !joinName.trim()}
+                  className="w-full py-3 border-2 border-[#121211] bg-[#C8322B] hover:bg-[#a8251f] disabled:opacity-40 text-[#FAF7F0] font-mono-tech text-xs uppercase tracking-widest font-bold shadow-[3px_3px_0px_#121211] transition cursor-pointer"
+                >
+                  Join Table {selectedTable} →
+                </button>
+              </form>
+            </div>
           </div>
         ) : state.phase === "lobby" ? (
           /* =========================================================
-             2. LOBBY SCREEN (Clean Role + Teammates Card)
+             2. LOBBY SCREEN (Minimal Dossier Sheet)
              ========================================================= */
-          <div className="space-y-4">
-            <div className="bg-white rounded-2xl border border-neutral-200 p-6">
-              <div className="flex items-center justify-between gap-2">
-                <div>
-                  <span
-                    className={`text-xs font-semibold ${
-                      currentPlayer.labId === "aegis"
-                        ? "text-blue-600"
-                        : "text-orange-600"
-                    }`}
-                  >
-                    Arena {currentPlayer.arenaNumber} •{" "}
-                    {LAB_PROFILES[currentPlayer.labId].name}
-                  </span>
-                  <h1 className="text-xl font-bold mt-0.5">
-                    Table {currentPlayer.tableNumber}
-                  </h1>
-                </div>
-                <span className="text-xs px-3 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 font-medium">
-                  Waiting for Host to Start
+          <div className="space-y-5">
+            <div className="dossier-sheet">
+              <div className="border-b-2 border-[#121211] bg-[#E6DFD1] px-6 py-2.5 flex items-center justify-between font-mono-tech text-xs uppercase">
+                <span>
+                  Arena {currentPlayer.arenaNumber} •{" "}
+                  {LAB_PROFILES[currentPlayer.labId].name}
+                </span>
+                <span className="text-[#C8322B] font-bold">
+                  Standing By for Host
                 </span>
               </div>
 
-              <p className="text-sm text-neutral-600 mt-2">
-                {LAB_PROFILES[currentPlayer.labId].backgroundBrief}
-              </p>
-
-              {/* Assigned Role Box */}
-              <div className="mt-5 pt-5 border-t border-neutral-100 flex flex-wrap items-center justify-between gap-4">
+              <div className="p-6 space-y-5">
                 <div>
-                  <div className="text-xs text-neutral-400 font-medium">
-                    Your Role
-                  </div>
-                  {currentPlayer.roleId ? (
-                    (() => {
-                      const r = ROLES.find(
-                        (x) => x.id === currentPlayer.roleId
-                      )!;
-                      return (
-                        <div className="mt-0.5">
-                          <span className="text-base font-bold">{r.title}</span>
-                          <p className="text-xs text-neutral-500 mt-0.5">
-                            {r.missionSummary}
-                          </p>
-                        </div>
-                      );
-                    })()
-                  ) : (
-                    <div className="text-sm font-medium text-neutral-500 mt-0.5">
-                      Host will assign roles shortly (or pick below)
-                    </div>
-                  )}
+                  <h1 className="text-2xl font-bold uppercase">
+                    Table {currentPlayer.tableNumber}
+                  </h1>
+                  <p className="font-editorial text-lg text-[#262523] mt-1">
+                    {LAB_PROFILES[currentPlayer.labId].backgroundBrief}
+                  </p>
                 </div>
 
-                <select
-                  aria-label="Select Role"
-                  value={currentPlayer.roleId || ""}
-                  onChange={(e) => handleRoleChange(e.target.value as RoleId)}
-                  className="px-3 py-1.5 rounded-lg border border-neutral-200 text-xs bg-neutral-50"
-                >
-                  <option value="" disabled>
-                    Switch role...
-                  </option>
-                  {ROLES.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.title}
+                {/* Assigned Role Box */}
+                <div className="pt-4 border-t-2 border-[#121211] flex flex-wrap items-center justify-between gap-4">
+                  <div>
+                    <div className="font-mono-tech text-[11px] uppercase text-[#57534E]">
+                      Your Assigned Role
+                    </div>
+                    {currentPlayer.roleId ? (
+                      (() => {
+                        const r = ROLES.find(
+                          (x) => x.id === currentPlayer.roleId
+                        )!;
+                        return (
+                          <div className="mt-0.5">
+                            <span className="text-lg font-bold uppercase">
+                              {r.title}
+                            </span>
+                            <p className="text-xs text-[#44403C] mt-0.5">
+                              {r.missionSummary}
+                            </p>
+                          </div>
+                        );
+                      })()
+                    ) : (
+                      <div className="font-mono-tech text-xs uppercase text-[#57534E] mt-1">
+                        Host will assign roles shortly (or pick below)
+                      </div>
+                    )}
+                  </div>
+
+                  <select
+                    aria-label="Select Role"
+                    value={currentPlayer.roleId || ""}
+                    onChange={(e) => handleRoleChange(e.target.value as RoleId)}
+                    className="px-3 py-1.5 border-2 border-[#121211] bg-[#F2EDE2] font-mono-tech text-xs uppercase"
+                  >
+                    <option value="" disabled>
+                      Switch role...
                     </option>
-                  ))}
-                </select>
+                    {ROLES.map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {r.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
 
             {/* Teammates List */}
-            <div className="bg-white rounded-2xl border border-neutral-200 p-6">
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-semibold">
-                  Table {currentPlayer.tableNumber} Teammates
-                </h2>
-                <span className="text-xs text-neutral-400">
-                  {myTable?.players.length || 0} / 5 joined
+            <div className="dossier-sheet">
+              <div className="border-b-2 border-[#121211] bg-[#E6DFD1] px-6 py-2.5 flex items-center justify-between font-mono-tech text-xs uppercase">
+                <span className="font-bold">
+                  Table {currentPlayer.tableNumber} Roster
                 </span>
+                <span>{myTable?.players.length || 0} / 5 Seated</span>
               </div>
-              <div className="divide-y divide-neutral-100">
+              <div className="divide-y divide-[#121211]">
                 {myTable?.players.map((p) => {
                   const r = ROLES.find((x) => x.id === p.roleId);
                   return (
                     <div
                       key={p.id}
-                      className="py-2.5 flex items-center justify-between text-sm"
+                      className="px-6 py-3 flex items-center justify-between font-mono-tech text-xs"
                     >
-                      <span className="font-medium">
+                      <span className="font-bold uppercase">
                         {p.name}{" "}
                         {p.id === currentPlayer.id && (
-                          <span className="text-xs text-neutral-400">(You)</span>
+                          <span className="text-[#C8322B]">(You)</span>
                         )}
                       </span>
-                      <span className="text-xs text-neutral-500">
+                      <span className="uppercase text-[#57534E]">
                         {r ? r.title : "Unassigned"}
                       </span>
                     </div>
@@ -478,33 +484,32 @@ export default function StudentSimulatorPage() {
           /* =========================================================
              4. FINAL RESULTS SCREEN
              ========================================================= */
-          <div className="bg-white rounded-2xl border border-neutral-200 p-6 space-y-5">
+          <div className="dossier-sheet p-6 space-y-5">
             <div>
-              <span className="text-xs font-semibold text-emerald-600">
+              <span className="stamp-badge text-[#166534]">
                 Simulation Complete
               </span>
-              <h1 className="text-2xl font-bold mt-0.5">
+              <h1 className="text-2xl font-bold uppercase mt-2">
                 Table {currentPlayer.tableNumber} Final Score:{" "}
                 {myTable?.totalScore} pts
               </h1>
-              <p className="text-sm text-neutral-500 mt-1">
+              <p className="font-mono-tech text-xs text-[#57534E] uppercase mt-1">
                 Rival Table {rivalTableNumber} ({rivalTable?.shortName}):{" "}
                 {rivalTable?.totalScore} pts
               </p>
             </div>
 
-            <div className="grid grid-cols-4 gap-2 text-center">
+            <div className="grid grid-cols-4 border-2 border-[#121211] divide-x-2 divide-[#121211] bg-[#F2EDE2] font-mono-tech text-center">
               {[
                 ["Security", myTable?.currentMetrics.security],
                 ["Capability", myTable?.currentMetrics.capability],
                 ["Trust", myTable?.currentMetrics.trust],
                 ["Growth", myTable?.currentMetrics.growth],
               ].map(([lbl, val]) => (
-                <div
-                  key={lbl}
-                  className="p-3 rounded-xl bg-neutral-50 border border-neutral-200"
-                >
-                  <div className="text-xs text-neutral-500">{lbl}</div>
+                <div key={lbl} className="p-3">
+                  <div className="text-[10px] uppercase text-[#57534E]">
+                    {lbl}
+                  </div>
                   <div className="text-lg font-bold mt-0.5">{val}</div>
                 </div>
               ))}
@@ -512,7 +517,7 @@ export default function StudentSimulatorPage() {
           </div>
         ) : (
           /* =========================================================
-             3. ACTIVE ACT VIEW (Focused 3-Step Flow)
+             3. ACTIVE ACT VIEW (Dossier Folder Tabs + Minimal Text)
              ========================================================= */
           (() => {
             const actDef = ACTS[currentActNumber];
@@ -529,17 +534,17 @@ export default function StudentSimulatorPage() {
               myTable?.actResolutions[String(currentActNumber)];
 
             return (
-              <div className="space-y-4">
-                {/* Compact Score & Step Switcher */}
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="inline-flex p-1 rounded-xl bg-neutral-200/70 text-xs font-medium">
+              <div>
+                {/* Folder Index Tabs + Compact Score */}
+                <div className="flex flex-wrap items-end justify-between gap-2 border-b-2 border-[#121211]">
+                  <div className="flex flex-wrap items-end gap-1">
                     <button
                       type="button"
                       onClick={() => setActiveTab("role")}
-                      className={`px-3.5 py-1.5 rounded-lg transition cursor-pointer ${
+                      className={`px-4 py-2.5 font-mono-tech text-xs uppercase font-bold border-t-2 border-l-2 border-r-2 border-[#121211] cursor-pointer ${
                         activeTab === "role"
-                          ? "bg-white text-neutral-900 shadow-2xs font-semibold"
-                          : "text-neutral-600"
+                          ? "bg-[#FAF7F0] text-[#121211] -mb-[2px] pb-[12px]"
+                          : "bg-[#E6DFD1] text-[#57534E]"
                       }`}
                     >
                       1. Your Move ({roleDef.shortTitle}){" "}
@@ -548,10 +553,10 @@ export default function StudentSimulatorPage() {
                     <button
                       type="button"
                       onClick={() => setActiveTab("team")}
-                      className={`px-3.5 py-1.5 rounded-lg transition cursor-pointer ${
+                      className={`px-4 py-2.5 font-mono-tech text-xs uppercase font-bold border-t-2 border-l-2 border-r-2 border-[#121211] cursor-pointer ${
                         activeTab === "team"
-                          ? "bg-white text-neutral-900 shadow-2xs font-semibold"
-                          : "text-neutral-600"
+                          ? "bg-[#FAF7F0] text-[#121211] -mb-[2px] pb-[12px]"
+                          : "bg-[#E6DFD1] text-[#57534E]"
                       }`}
                     >
                       2. Team Vote {tableChosenDecision ? "✓" : ""}
@@ -559,43 +564,43 @@ export default function StudentSimulatorPage() {
                     <button
                       type="button"
                       onClick={() => setActiveTab("results")}
-                      className={`px-3.5 py-1.5 rounded-lg transition cursor-pointer ${
+                      className={`px-4 py-2.5 font-mono-tech text-xs uppercase font-bold border-t-2 border-l-2 border-r-2 border-[#121211] cursor-pointer ${
                         activeTab === "results"
-                          ? "bg-white text-neutral-900 shadow-2xs font-semibold"
+                          ? "bg-[#FAF7F0] text-[#121211] -mb-[2px] pb-[12px]"
                           : isCurrentActUnlocked
-                          ? "text-emerald-700 font-semibold"
-                          : "text-neutral-600"
+                          ? "bg-[#166534] text-[#FAF7F0]"
+                          : "bg-[#E6DFD1] text-[#57534E]"
                       }`}
                     >
-                      3. Results {isCurrentActUnlocked ? "• Live" : ""}
+                      3. Results {isCurrentActUnlocked ? "✓" : ""}
                     </button>
                   </div>
 
-                  <div className="text-xs text-neutral-500">
-                    Score: <strong className="text-neutral-900">{myTable?.totalScore}</strong> vs Rival{" "}
+                  <div className="font-mono-tech text-xs pb-2">
+                    SCORE: <strong>{myTable?.totalScore}</strong> vs RIVAL{" "}
                     <strong>{rivalTable?.totalScore}</strong>
                   </div>
                 </div>
 
                 {/* STEP 1: YOUR CLUE & MOVE */}
                 {activeTab === "role" && (
-                  <div className="bg-white rounded-2xl border border-neutral-200 p-6 space-y-5">
+                  <div className="dossier-sheet border-t-0 p-6 space-y-5">
                     <div>
-                      <span className="text-xs font-semibold text-red-600">
+                      <span className="stamp-badge text-[#C8322B]">
                         {actDef.title}
                       </span>
-                      <h1 className="text-lg font-bold mt-0.5">
+                      <h1 className="text-xl font-bold uppercase mt-2">
                         {actDef.subtitle}
                       </h1>
-                      <p className="text-sm text-neutral-600 mt-2 leading-relaxed">
+                      <p className="font-editorial text-lg text-[#262523] mt-1.5 leading-relaxed">
                         {actDef.situationBriefing.join(" ")}
                       </p>
                     </div>
 
                     {/* Role Clue Box */}
-                    <div className="p-4 rounded-xl bg-neutral-50 border border-neutral-200 space-y-2.5">
+                    <div className="p-4 border-2 border-[#121211] bg-[#F2EDE2] space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-neutral-900">
+                        <span className="font-mono-tech text-xs uppercase font-bold">
                           Your Clue ({roleDef.title})
                         </span>
                         <select
@@ -604,7 +609,7 @@ export default function StudentSimulatorPage() {
                           onChange={(e) =>
                             handleRoleChange(e.target.value as RoleId)
                           }
-                          className="text-xs bg-white border border-neutral-200 rounded-md px-2 py-1"
+                          className="font-mono-tech text-xs bg-[#FAF7F0] border border-[#121211] px-2 py-1 uppercase"
                         >
                           {ROLES.map((r) => (
                             <option key={r.id} value={r.id}>
@@ -614,25 +619,27 @@ export default function StudentSimulatorPage() {
                         </select>
                       </div>
 
-                      <p className="text-sm text-neutral-700 leading-relaxed">
+                      <p className="text-sm text-[#121211] leading-relaxed">
                         {roleContent.intelBody}
                       </p>
 
                       {roleContent.terminalSnippet && (
-                        <pre className="p-3 rounded-lg bg-neutral-900 text-neutral-100 font-mono text-xs overflow-x-auto whitespace-pre-wrap">
+                        <pre className="p-3 border border-[#121211] bg-[#121211] text-[#FAF7F0] font-mono-tech text-xs overflow-x-auto whitespace-pre-wrap">
                           {roleContent.terminalSnippet}
                         </pre>
                       )}
 
-                      <p className="text-xs font-medium text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                        💬 <strong>Say to your table:</strong>{" "}
+                      <p className="font-mono-tech text-xs bg-[#FAF7F0] border border-[#121211] px-3 py-2">
+                        <strong className="text-[#C8322B] uppercase">
+                          Say to your table:
+                        </strong>{" "}
                         {roleContent.tablePrompt}
                       </p>
                     </div>
 
                     {/* 3 Clean Choice Buttons */}
                     <div className="space-y-2">
-                      <div className="text-xs font-semibold text-neutral-500">
+                      <div className="font-mono-tech text-xs uppercase font-bold">
                         Pick your {roleDef.shortTitle} move:
                       </div>
                       {roleContent.options.map((opt) => {
@@ -643,16 +650,18 @@ export default function StudentSimulatorPage() {
                             type="button"
                             disabled={submitting || isCurrentActUnlocked}
                             onClick={() => handleSelectDepartmentAction(opt.id)}
-                            className={`w-full text-left p-3.5 rounded-xl border text-sm transition flex items-center justify-between gap-3 cursor-pointer ${
+                            className={`w-full text-left p-3.5 border-2 border-[#121211] text-sm transition flex items-center justify-between gap-3 cursor-pointer ${
                               isPicked
-                                ? "border-neutral-900 bg-neutral-900 text-white font-medium"
-                                : "border-neutral-200 bg-white hover:bg-neutral-50"
+                                ? "bg-[#121211] text-[#FAF7F0] font-bold"
+                                : "bg-[#F2EDE2] hover:bg-white text-[#121211]"
                             }`}
                           >
-                            <span>{opt.label}</span>
+                            <span>
+                              [{isPicked ? "X" : " "}] {opt.label}
+                            </span>
                             {isPicked && (
-                              <span className="text-xs shrink-0 px-2 py-0.5 rounded-md bg-white/20">
-                                Saved
+                              <span className="font-mono-tech text-[10px] uppercase px-2 py-0.5 bg-[#C8322B] text-[#FAF7F0] shrink-0">
+                                Filed
                               </span>
                             )}
                           </button>
@@ -661,11 +670,11 @@ export default function StudentSimulatorPage() {
                     </div>
 
                     {/* Optional "Learn More" Accordion */}
-                    <details className="text-xs text-neutral-500 border-t border-neutral-100 pt-3">
-                      <summary className="cursor-pointer font-medium text-neutral-700">
-                        💡 Why this matters in real cybersecurity
+                    <details className="font-mono-tech text-xs border-t border-[#121211] pt-3">
+                      <summary className="cursor-pointer font-bold uppercase">
+                        + Why this matters in real cybersecurity
                       </summary>
-                      <ul className="mt-2 space-y-1.5 list-disc list-inside text-neutral-600">
+                      <ul className="mt-2 space-y-1.5 list-disc list-inside font-sans text-xs text-[#262523]">
                         {actDef.learningTakeawayBullets.map((b, i) => (
                           <li key={i}>{b}</li>
                         ))}
@@ -676,7 +685,7 @@ export default function StudentSimulatorPage() {
                       <button
                         type="button"
                         onClick={() => setActiveTab("team")}
-                        className="px-4 py-2 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-xs font-semibold cursor-pointer"
+                        className="px-4 py-2 border-2 border-[#121211] bg-[#121211] text-[#FAF7F0] font-mono-tech text-xs uppercase font-bold cursor-pointer"
                       >
                         Next: Team Vote →
                       </button>
@@ -686,18 +695,18 @@ export default function StudentSimulatorPage() {
 
                 {/* STEP 2: TEAM VOTE */}
                 {activeTab === "team" && (
-                  <div className="bg-white rounded-2xl border border-neutral-200 p-6 space-y-5">
+                  <div className="dossier-sheet border-t-0 p-6 space-y-5">
                     <div>
-                      <h2 className="text-lg font-bold">
+                      <h2 className="text-xl font-bold uppercase">
                         Table {currentPlayer.tableNumber} Team Decision
                       </h2>
-                      <p className="text-xs text-neutral-500 mt-0.5">
+                      <p className="text-xs text-[#57534E] mt-0.5">
                         Agree on one strategy as a table and tap to lock it in.
                       </p>
                     </div>
 
                     {/* Simple 5-Role Readiness Pills */}
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="flex flex-wrap gap-1.5 font-mono-tech text-xs">
                       {ROLES.map((r) => {
                         const done = myTable?.players
                           .filter((p) => p.roleId === r.id)
@@ -709,10 +718,10 @@ export default function StudentSimulatorPage() {
                         return (
                           <span
                             key={r.id}
-                            className={`text-xs px-2.5 py-1 rounded-full border ${
+                            className={`px-2.5 py-1 border border-[#121211] uppercase ${
                               done
-                                ? "bg-emerald-50 border-emerald-200 text-emerald-700 font-medium"
-                                : "bg-neutral-50 border-neutral-200 text-neutral-400"
+                                ? "bg-[#121211] text-[#FAF7F0] font-bold"
+                                : "bg-[#F2EDE2] text-[#57534E]"
                             }`}
                           >
                             {r.shortTitle} {done ? "✓" : ""}
@@ -731,27 +740,27 @@ export default function StudentSimulatorPage() {
                             type="button"
                             disabled={submitting || isCurrentActUnlocked}
                             onClick={() => handleSelectTeamDecision(dec.id)}
-                            className={`w-full text-left p-4 rounded-xl border transition cursor-pointer ${
+                            className={`w-full text-left p-4 border-2 border-[#121211] transition cursor-pointer ${
                               isSelected
-                                ? "border-neutral-900 bg-neutral-900 text-white"
-                                : "border-neutral-200 bg-white hover:bg-neutral-50"
+                                ? "bg-[#121211] text-[#FAF7F0]"
+                                : "bg-[#F2EDE2] hover:bg-white text-[#121211]"
                             }`}
                           >
                             <div className="flex items-center justify-between gap-2">
-                              <span className="font-semibold text-sm">
-                                {dec.title}
+                              <span className="font-bold text-sm uppercase">
+                                [{isSelected ? "X" : " "}] {dec.title}
                               </span>
                               {isSelected && (
-                                <span className="text-xs px-2 py-0.5 rounded-md bg-white/20 shrink-0">
-                                  Locked In
+                                <span className="font-mono-tech text-[10px] uppercase px-2 py-0.5 bg-[#C8322B] text-[#FAF7F0] shrink-0">
+                                  Ratified
                                 </span>
                               )}
                             </div>
                             <p
                               className={`text-xs mt-1 ${
                                 isSelected
-                                  ? "text-neutral-300"
-                                  : "text-neutral-500"
+                                  ? "text-[#D6D0C4]"
+                                  : "text-[#44403C]"
                               }`}
                             >
                               {dec.subtitle}
@@ -765,13 +774,16 @@ export default function StudentSimulatorPage() {
 
                 {/* STEP 3: RESULTS */}
                 {activeTab === "results" && (
-                  <div className="bg-white rounded-2xl border border-neutral-200 p-6">
+                  <div className="dossier-sheet border-t-0 p-6">
                     {!isCurrentActUnlocked ? (
                       <div className="py-10 text-center space-y-2">
-                        <div className="text-base font-bold">
+                        <span className="stamp-badge text-[#C8322B]">
+                          Sealed
+                        </span>
+                        <div className="text-lg font-bold uppercase mt-2">
                           Waiting for Admin Debrief
                         </div>
-                        <p className="text-sm text-neutral-500 max-w-md mx-auto">
+                        <p className="font-editorial text-base text-[#44403C] max-w-md mx-auto">
                           Once both tables in Arena {currentPlayer.arenaNumber}{" "}
                           lock in their decisions, an Admin will visit your
                           table to read the outcome and unlock your score.
@@ -780,15 +792,15 @@ export default function StudentSimulatorPage() {
                     ) : (
                       <div className="space-y-5">
                         <div>
-                          <span className="text-xs font-semibold text-emerald-600">
-                            Act {currentActNumber} Results
+                          <span className="stamp-badge text-[#166534]">
+                            Act {currentActNumber} Declassified
                           </span>
-                          <h2 className="text-lg font-bold mt-0.5">
+                          <h2 className="text-lg font-bold uppercase mt-2">
                             {myResolution?.teamDecisionTitle}
                           </h2>
                         </div>
 
-                        <div className="grid grid-cols-4 gap-2 text-center">
+                        <div className="grid grid-cols-4 border-2 border-[#121211] divide-x-2 divide-[#121211] bg-[#F2EDE2] font-mono-tech text-center">
                           {(
                             [
                               ["Security", myResolution?.totalDelta.security],
@@ -800,18 +812,15 @@ export default function StudentSimulatorPage() {
                               ["Growth", myResolution?.totalDelta.growth],
                             ] as const
                           ).map(([label, val]) => (
-                            <div
-                              key={label}
-                              className="p-3 rounded-xl bg-neutral-50 border border-neutral-200"
-                            >
-                              <div className="text-xs text-neutral-500">
+                            <div key={label} className="p-3">
+                              <div className="text-[10px] uppercase text-[#57534E]">
                                 {label}
                               </div>
                               <div
                                 className={`text-base font-bold mt-0.5 ${
                                   (val || 0) >= 0
-                                    ? "text-emerald-600"
-                                    : "text-red-600"
+                                    ? "text-[#166534]"
+                                    : "text-[#C8322B]"
                                 }`}
                               >
                                 {(val || 0) >= 0 ? `+${val}` : val}
@@ -821,34 +830,32 @@ export default function StudentSimulatorPage() {
                         </div>
 
                         {arenaDebrief && (
-                          <div className="p-4 rounded-xl bg-neutral-50 border border-neutral-200 text-sm text-neutral-700 space-y-2">
-                            <p>
+                          <div className="p-4 border-2 border-[#121211] bg-[#F2EDE2] space-y-2">
+                            <p className="font-editorial text-base text-[#121211]">
                               {arenaDebrief.readAloudScript.crossArenaCollision}
                             </p>
-                            <p className="text-xs text-neutral-500 pt-2 border-t border-neutral-200">
-                              <strong>Key Takeaway:</strong>{" "}
+                            <p className="font-mono-tech text-xs text-[#166534] pt-2 border-t border-[#121211]">
+                              <strong>Takeaway:</strong>{" "}
                               {myResolution?.socLesson}
                             </p>
                           </div>
                         )}
 
-                        <details className="text-xs border-t border-neutral-100 pt-3">
-                          <summary className="cursor-pointer font-medium text-neutral-700">
-                            View all 5 role results at your table
+                        <details className="font-mono-tech text-xs border-t border-[#121211] pt-3">
+                          <summary className="cursor-pointer font-bold uppercase">
+                            + View all 5 role results at your table
                           </summary>
-                          <div className="mt-3 space-y-2">
+                          <div className="mt-3 space-y-2 font-sans">
                             {myResolution?.departmentBreakdown.map((dept) => (
                               <div
                                 key={dept.roleId}
-                                className="p-3 rounded-xl bg-neutral-50 border border-neutral-200"
+                                className="p-3 border border-[#121211] bg-[#F2EDE2]"
                               >
-                                <div className="flex justify-between font-semibold text-neutral-900">
+                                <div className="flex justify-between font-mono-tech font-bold uppercase text-xs">
                                   <span>{dept.roleTitle}</span>
-                                  <span className="uppercase text-[11px] text-neutral-500">
-                                    {dept.evaluation}
-                                  </span>
+                                  <span>{dept.evaluation}</span>
                                 </div>
-                                <div className="text-neutral-600 mt-0.5">
+                                <div className="text-xs text-[#262523] mt-1">
                                   {dept.debriefNote}
                                 </div>
                               </div>
