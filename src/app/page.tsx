@@ -82,6 +82,8 @@ export default function StudentSimulatorPage() {
   useEffect(() => {
     if (isCurrentActUnlocked) {
       setActiveTab("results");
+    } else {
+      setActiveTab("role");
     }
   }, [isCurrentActUnlocked, currentActNumber]);
 
@@ -485,18 +487,35 @@ export default function StudentSimulatorPage() {
              4. FINAL RESULTS SCREEN
              ========================================================= */
           <div className="dossier-sheet p-6 space-y-5">
-            <div>
-              <span className="stamp-badge text-[#166534]">
-                Simulation Complete
-              </span>
-              <h1 className="text-2xl font-bold uppercase mt-2">
-                Table {currentPlayer.tableNumber} Final Score:{" "}
-                {myTable?.totalScore} pts
-              </h1>
-              <p className="font-mono-tech text-xs text-[#57534E] uppercase mt-1">
-                Rival Table {rivalTableNumber} ({rivalTable?.shortName}):{" "}
-                {rivalTable?.totalScore} pts
-              </p>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <span className="stamp-badge text-[#166534]">
+                  Simulation Complete
+                </span>
+                <h1 className="text-2xl font-bold uppercase mt-2">
+                  Table {currentPlayer.tableNumber} Final Score:{" "}
+                  {myTable?.totalScore} pts
+                </h1>
+                <p className="font-mono-tech text-xs text-[#57534E] uppercase mt-1">
+                  Rival Table {rivalTableNumber} ({rivalTable?.shortName}):{" "}
+                  {rivalTable?.totalScore} pts
+                </p>
+              </div>
+              {myTable && rivalTable && (
+                <span
+                  className={`stamp-badge ${
+                    myTable.totalScore >= rivalTable.totalScore
+                      ? "text-[#166534]"
+                      : "text-[#C8322B]"
+                  }`}
+                >
+                  {myTable.totalScore > rivalTable.totalScore
+                    ? `Arena ${currentPlayer.arenaNumber} Winner`
+                    : myTable.totalScore === rivalTable.totalScore
+                    ? `Arena ${currentPlayer.arenaNumber} Tied`
+                    : `Table ${rivalTableNumber} Won Arena ${currentPlayer.arenaNumber}`}
+                </span>
+              )}
             </div>
 
             <div className="grid grid-cols-4 border-2 border-[#121211] divide-x-2 divide-[#121211] bg-[#F2EDE2] font-mono-tech text-center">
@@ -513,6 +532,31 @@ export default function StudentSimulatorPage() {
                   <div className="text-lg font-bold mt-0.5">{val}</div>
                 </div>
               ))}
+            </div>
+
+            <div className="space-y-2 border-t-2 border-[#121211] pt-4">
+              <div className="font-mono-tech text-xs uppercase font-bold">
+                3-Act Dossier Log
+              </div>
+              {([1, 2, 3] as const).map((actNum) => {
+                const res = myTable?.actResolutions[String(actNum)];
+                return (
+                  <div
+                    key={actNum}
+                    className="p-3 border border-[#121211] bg-[#F2EDE2] flex items-center justify-between gap-2 text-xs"
+                  >
+                    <div>
+                      <span className="font-mono-tech font-bold uppercase">
+                        Act {actNum}:
+                      </span>{" "}
+                      <span>{res?.teamDecisionTitle}</span>
+                    </div>
+                    <span className="font-mono-tech uppercase text-[10px] text-[#57534E] shrink-0">
+                      {res?.teamDecisionStance}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         ) : (

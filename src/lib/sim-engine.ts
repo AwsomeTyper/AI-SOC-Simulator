@@ -178,7 +178,7 @@ declare global {
   // eslint-disable-next-line no-var
   var __AI_SOC_SIM_STATE__: SimulationState | undefined;
   // eslint-disable-next-line no-var
-  var __AI_SOC_LOADED_FROM_DB__: boolean | undefined;
+  var __AI_SOC_LAST_DB_FETCH_MS__: number | undefined;
 }
 
 function loadFromDisk(): SimulationState | null {
@@ -223,7 +223,9 @@ async function syncToSupabase(state: SimulationState) {
   }
 }
 
-export async function getSimulationState(): Promise<SimulationState> {
+export async function getSimulationState(
+  forceDbCheck = false
+): Promise<SimulationState> {
   if (!global.__AI_SOC_SIM_STATE__) {
     const diskState = loadFromDisk();
     if (diskState) {
@@ -233,9 +235,14 @@ export async function getSimulationState(): Promise<SimulationState> {
     }
   }
 
-  // On first boot, check if Supabase has a newer state snapshot
-  if (!global.__AI_SOC_LOADED_FROM_DB__) {
-    global.__AI_SOC_LOADED_FROM_DB__ = true;
+  // Poll Supabase at most once per 1000ms (or immediately before mutations) so Vercel serverless instances stay in sync
+  const nowMs = Date.now();
+  if (
+    forceDbCheck ||
+    !global.__AI_SOC_LAST_DB_FETCH_MS__ ||
+    nowMs - global.__AI_SOC_LAST_DB_FETCH_MS__ > 1000
+  ) {
+    global.__AI_SOC_LAST_DB_FETCH_MS__ = nowMs;
     const sb = getSupabaseAdmin();
     if (sb) {
       try {
@@ -283,14 +290,15 @@ export async function getSimulationState(): Promise<SimulationState> {
 export async function updateSimulationState(
   mutator: (draft: SimulationState) => void
 ): Promise<SimulationState> {
-  const state = await getSimulationState();
+  const state = await getSimulationState(true);
+  const prevVersion = state.version || 1;
   mutator(state);
-  state.version = (state.version || 1) + 1;
+  state.version = Math.max(prevVersion, state.version || 1) + 1;
   if (state.auditLogs.length > 120) {
     state.auditLogs = state.auditLogs.slice(0, 120);
   }
   saveToDisk(state);
-  void syncToSupabase(state);
+  await syncToSupabase(state);
   return state;
 }
 
@@ -570,7 +578,7 @@ export function seedDemoPlayers(state: SimulationState) {
     "Riley", "Cameron", "Quinn", "Avery", "Parker",
     "Sawyer", "Peyton", "Blake", "Hayden", "Rowan",
     "Dakota", "Reese", "Finley", "Emerson", "Tatum",
-    "Kai", "Devon", "Skyler", "Kendall", "logan",
+    "Kai", "Devon", "Skyler", "Kendall", "Logan",
     "Micah", "Elena", "Marcus", "Priya", "Liam",
     "Sophia", "Noah", "Maya", "Ethan", "Chloe",
     "Lucas", "Zoe", "Mason", "Lily", "Owen",
@@ -579,13 +587,44 @@ export function seedDemoPlayers(state: SimulationState) {
   ];
 
   const roleOrder: RoleId[] = ["ceo", "cyber", "research", "growth", "policy"];
-  state.players = {};
+
+  // Keep any real human players who already checked in so solo testers aren't logged out
+  const preservedHumanPlayers: Record<string, PlayerRecord> = {};
+  for (const [id, p] of Object.entries(state.players)) {
+    if (!id.startsWith("demo-")) {
+      preservedHumanPlayers[id] = p;
+    }
+  }
+  state.players = preservedHumanPlayers;
 
   let idx = 0;
   for (let t = 1; t <= 10; t++) {
     const labId = getTableLabId(t);
     const arenaNumber = getTableArenaNumber(t);
+    const existingAtTable = Object.values(state.players).filter(
+      (p) => p.tableNumber === t
+    );
+
+    // Ensure any human players at this table have a role assigned
+    const takenRoles = new Set<RoleId>();
+    for (const hp of existingAtTable) {
+      if (hp.roleId) {
+        takenRoles.add(hp.roleId);
+      }
+    }
+    for (const hp of existingAtTable) {
+      if (!hp.roleId) {
+        const openRole =
+          roleOrder.find((r) => !takenRoles.has(r)) || "cyber";
+        hp.roleId = openRole;
+        takenRoles.add(openRole);
+      }
+    }
+
+    // Fill remaining open roles at this table with demo students up to 5 total
     for (let r = 0; r < 5; r++) {
+      const roleId = roleOrder[r];
+      if (takenRoles.has(roleId)) continue;
       const name = firstNames[idx % firstNames.length];
       const id = `demo-t${t}-p${r + 1}`;
       state.players[id] = {
@@ -594,7 +633,7 @@ export function seedDemoPlayers(state: SimulationState) {
         tableNumber: t,
         arenaNumber,
         labId,
-        roleId: roleOrder[r],
+        roleId,
         departmentChoices: {},
         joinedAt: new Date(Date.now() + idx * 100).toISOString(),
       };
