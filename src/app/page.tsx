@@ -4,6 +4,8 @@ import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import {
   ACTS,
+  ActNumber,
+  ALL_ACTS,
   getTableLabId,
   LAB_PROFILES,
   RoleId,
@@ -26,6 +28,14 @@ function formatTimer(seconds: number): string {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
   return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+}
+
+function getActFromPhase(phase?: string): ActNumber {
+  if (phase === "act2") return 2;
+  if (phase === "act3") return 3;
+  if (phase === "act4") return 4;
+  if (phase === "act5") return 5;
+  return 1;
 }
 
 export default function StudentSimulatorPage() {
@@ -63,12 +73,7 @@ export default function StudentSimulatorPage() {
       ? data.state.players[playerId]
       : null;
 
-  const currentActNumber: 1 | 2 | 3 =
-    data?.state.phase === "act2"
-      ? 2
-      : data?.state.phase === "act3"
-      ? 3
-      : 1;
+  const currentActNumber: ActNumber = getActFromPhase(data?.state.phase);
 
   const myTable: ComputedTableView | null =
     data && currentPlayer
@@ -207,7 +212,7 @@ export default function StudentSimulatorPage() {
     );
   }
 
-  const { state, computedTables, arenaDebriefs } = data;
+  const { state, computedTables } = data;
   const rivalTableNumber = currentPlayer
     ? currentPlayer.tableNumber % 2 === 1
       ? currentPlayer.tableNumber + 1
@@ -403,7 +408,6 @@ export default function StudentSimulatorPage() {
                   </p>
                 </div>
 
-                {/* Assigned Role Box */}
                 <div className="pt-4 border-t-2 border-[#121211] flex flex-wrap items-center justify-between gap-4">
                   <div>
                     <div className="font-mono-tech text-[11px] uppercase text-[#57534E]">
@@ -451,7 +455,6 @@ export default function StudentSimulatorPage() {
               </div>
             </div>
 
-            {/* Teammates List */}
             <div className="dossier-sheet">
               <div className="border-b-2 border-[#121211] bg-[#E6DFD1] px-6 py-2.5 flex items-center justify-between font-mono-tech text-xs uppercase">
                 <span className="font-bold">
@@ -484,7 +487,7 @@ export default function StudentSimulatorPage() {
           </div>
         ) : state.phase === "debrief" ? (
           /* =========================================================
-             4. FINAL RESULTS SCREEN
+             4. FINAL RESULTS SCREEN (5-Act Log)
              ========================================================= */
           <div className="dossier-sheet p-6 space-y-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
@@ -536,9 +539,9 @@ export default function StudentSimulatorPage() {
 
             <div className="space-y-2 border-t-2 border-[#121211] pt-4">
               <div className="font-mono-tech text-xs uppercase font-bold">
-                3-Act Dossier Log
+                5-Act Dossier Log
               </div>
-              {([1, 2, 3] as const).map((actNum) => {
+              {ALL_ACTS.map((actNum) => {
                 const res = myTable?.actResolutions[String(actNum)];
                 return (
                   <div
@@ -561,7 +564,7 @@ export default function StudentSimulatorPage() {
           </div>
         ) : (
           /* =========================================================
-             3. ACTIVE ACT VIEW (Dossier Folder Tabs + Minimal Text)
+             3. ACTIVE ACT VIEW (Acts 1–5 Dossier Folder Tabs)
              ========================================================= */
           (() => {
             const actDef = ACTS[currentActNumber];
@@ -572,10 +575,9 @@ export default function StudentSimulatorPage() {
               currentPlayer.departmentChoices[String(currentActNumber)] || null;
             const tableChosenDecision =
               myTable?.teamDecisions[String(currentActNumber)] || null;
-            const arenaDebrief =
-              arenaDebriefs[`${currentPlayer.arenaNumber}-${currentActNumber}`];
             const myResolution =
               myTable?.actResolutions[String(currentActNumber)];
+            const labNote = roleContent.labNote?.[currentPlayer.labId];
 
             return (
               <div>
@@ -621,7 +623,8 @@ export default function StudentSimulatorPage() {
                   </div>
 
                   <div className="font-mono-tech text-xs pb-2">
-                    SCORE: <strong>{myTable?.totalScore}</strong> vs RIVAL{" "}
+                    ACT {currentActNumber}/5 • SCORE:{" "}
+                    <strong>{myTable?.totalScore}</strong> vs RIVAL{" "}
                     <strong>{rivalTable?.totalScore}</strong>
                   </div>
                 </div>
@@ -643,9 +646,9 @@ export default function StudentSimulatorPage() {
 
                     {/* Role Clue Box */}
                     <div className="p-4 border-2 border-[#121211] bg-[#F2EDE2] space-y-3">
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between gap-2">
                         <span className="font-mono-tech text-xs uppercase font-bold">
-                          Your Clue ({roleDef.title})
+                          {roleDef.title} Telemetry — {roleContent.intelHeadline}
                         </span>
                         <select
                           aria-label="Switch Role"
@@ -667,6 +670,12 @@ export default function StudentSimulatorPage() {
                         {roleContent.intelBody}
                       </p>
 
+                      {labNote && (
+                        <div className="font-mono-tech text-xs px-3 py-2 border border-[#121211] bg-[#E6DFD1] text-[#121211]">
+                          {labNote}
+                        </div>
+                      )}
+
                       {roleContent.terminalSnippet && (
                         <pre className="p-3 border border-[#121211] bg-[#121211] text-[#FAF7F0] font-mono-tech text-xs overflow-x-auto whitespace-pre-wrap">
                           {roleContent.terminalSnippet}
@@ -675,16 +684,16 @@ export default function StudentSimulatorPage() {
 
                       <p className="font-mono-tech text-xs bg-[#FAF7F0] border border-[#121211] px-3 py-2">
                         <strong className="text-[#C8322B] uppercase">
-                          Say to your table:
+                          Cross-Check With Table:
                         </strong>{" "}
                         {roleContent.tablePrompt}
                       </p>
                     </div>
 
-                    {/* 3 Clean Choice Buttons */}
+                    {/* 3 Plausible Choice Buttons (Shuffled order, trade-off summary) */}
                     <div className="space-y-2">
                       <div className="font-mono-tech text-xs uppercase font-bold">
-                        Pick your {roleDef.shortTitle} move:
+                        Select Your {roleDef.shortTitle} Directive:
                       </div>
                       {roleContent.options.map((opt) => {
                         const isPicked = myChosenDeptOption === opt.id;
@@ -694,36 +703,33 @@ export default function StudentSimulatorPage() {
                             type="button"
                             disabled={submitting || isCurrentActUnlocked}
                             onClick={() => handleSelectDepartmentAction(opt.id)}
-                            className={`w-full text-left p-3.5 border-2 border-[#121211] text-sm transition flex items-center justify-between gap-3 cursor-pointer ${
+                            className={`w-full text-left p-3.5 border-2 border-[#121211] text-sm transition cursor-pointer ${
                               isPicked
-                                ? "bg-[#121211] text-[#FAF7F0] font-bold"
+                                ? "bg-[#121211] text-[#FAF7F0]"
                                 : "bg-[#F2EDE2] hover:bg-white text-[#121211]"
                             }`}
                           >
-                            <span>
-                              [{isPicked ? "X" : " "}] {opt.label}
-                            </span>
-                            {isPicked && (
-                              <span className="font-mono-tech text-[10px] uppercase px-2 py-0.5 bg-[#C8322B] text-[#FAF7F0] shrink-0">
-                                Filed
+                            <div className="flex items-center justify-between gap-3">
+                              <span className="font-bold">
+                                [{isPicked ? "X" : " "}] {opt.label}
                               </span>
-                            )}
+                              {isPicked && (
+                                <span className="font-mono-tech text-[10px] uppercase px-2 py-0.5 bg-[#C8322B] text-[#FAF7F0] shrink-0">
+                                  Filed
+                                </span>
+                              )}
+                            </div>
+                            <p
+                              className={`text-xs mt-1 ${
+                                isPicked ? "text-[#D6D0C4]" : "text-[#44403C]"
+                              }`}
+                            >
+                              {opt.summary}
+                            </p>
                           </button>
                         );
                       })}
                     </div>
-
-                    {/* Optional "Learn More" Accordion */}
-                    <details className="font-mono-tech text-xs border-t border-[#121211] pt-3">
-                      <summary className="cursor-pointer font-bold uppercase">
-                        + Why this matters in real cybersecurity
-                      </summary>
-                      <ul className="mt-2 space-y-1.5 list-disc list-inside font-sans text-xs text-[#262523]">
-                        {actDef.learningTakeawayBullets.map((b, i) => (
-                          <li key={i}>{b}</li>
-                        ))}
-                      </ul>
-                    </details>
 
                     <div className="flex justify-end pt-1">
                       <button
@@ -742,14 +748,15 @@ export default function StudentSimulatorPage() {
                   <div className="dossier-sheet border-t-0 p-6 space-y-5">
                     <div>
                       <h2 className="text-xl font-bold uppercase">
-                        Table {currentPlayer.tableNumber} Team Decision
+                        Table {currentPlayer.tableNumber} Executive Decision
                       </h2>
                       <p className="text-xs text-[#57534E] mt-0.5">
-                        Agree on one strategy as a table and tap to lock it in.
+                        Compare all 5 roles&apos; clues—and watch out for{" "}
+                        {rivalTable?.shortName} (Table {rivalTableNumber})!
                       </p>
                     </div>
 
-                    {/* Simple 5-Role Readiness Pills */}
+                    {/* 5-Role Readiness Pills */}
                     <div className="flex flex-wrap gap-1.5 font-mono-tech text-xs">
                       {ROLES.map((r) => {
                         const done = myTable?.players
@@ -816,7 +823,7 @@ export default function StudentSimulatorPage() {
                   </div>
                 )}
 
-                {/* STEP 3: RESULTS */}
+                {/* STEP 3: RESULTS (Declassified Jigsaw Twist, Combos & Rival Impact) */}
                 {activeTab === "results" && (
                   <div className="dossier-sheet border-t-0 p-6">
                     {!isCurrentActUnlocked ? (
@@ -830,7 +837,7 @@ export default function StudentSimulatorPage() {
                         <p className="font-editorial text-base text-[#44403C] max-w-md mx-auto">
                           Once both tables in Arena {currentPlayer.arenaNumber}{" "}
                           lock in their decisions, an Admin will visit your
-                          table to read the outcome and unlock your score.
+                          table to reveal the hidden twist and unlock your score.
                         </p>
                       </div>
                     ) : (
@@ -873,21 +880,48 @@ export default function StudentSimulatorPage() {
                           ))}
                         </div>
 
-                        {arenaDebrief && (
-                          <div className="p-4 border-2 border-[#121211] bg-[#F2EDE2] space-y-2">
-                            <p className="font-editorial text-base text-[#121211]">
-                              {arenaDebrief.readAloudScript.crossArenaCollision}
-                            </p>
-                            <p className="font-mono-tech text-xs text-[#166534] pt-2 border-t border-[#121211]">
-                              <strong>Takeaway:</strong>{" "}
-                              {myResolution?.socLesson}
+                        {/* Declassified Jigsaw Twist & Cross-Arena Impact */}
+                        <div className="p-4 border-2 border-[#121211] bg-[#F2EDE2] space-y-2.5 text-xs">
+                          <div>
+                            <strong className="font-mono-tech uppercase text-[#C8322B] block">
+                              What Really Happened:
+                            </strong>
+                            <p className="text-sm text-[#121211] mt-0.5">
+                              {myResolution?.jigsawReveal}
                             </p>
                           </div>
-                        )}
+
+                          <div className="pt-2 border-t border-[#121211]">
+                            <strong className="font-mono-tech uppercase text-[#1846C7] block">
+                              Aegis ↔ Vanguard Arena Impact:
+                            </strong>
+                            <p className="text-xs text-[#262523] mt-0.5">
+                              {myResolution?.rivalInteractionNote}
+                            </p>
+                          </div>
+
+                          {myResolution &&
+                            myResolution.triggeredEvents.length > 0 && (
+                              <div className="pt-2 border-t border-[#121211] space-y-1">
+                                <strong className="font-mono-tech uppercase text-[#166534] block">
+                                  Role Combos &amp; Carry-Over Effects:
+                                </strong>
+                                {myResolution.triggeredEvents.map((ev, i) => (
+                                  <p
+                                    key={i}
+                                    className="font-mono-tech text-xs text-[#121211]"
+                                  >
+                                    • {ev}
+                                  </p>
+                                ))}
+                              </div>
+                            )}
+                        </div>
 
                         <details className="font-mono-tech text-xs border-t border-[#121211] pt-3">
                           <summary className="cursor-pointer font-bold uppercase">
-                            + View all 5 role results at your table
+                            + View all 5 role evaluations &amp; cybersecurity
+                            takeaways
                           </summary>
                           <div className="mt-3 space-y-2 font-sans">
                             {myResolution?.departmentBreakdown.map((dept) => (

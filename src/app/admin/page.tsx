@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import { getArenaTables } from "@/lib/scenario";
+import { ActNumber, ALL_ACTS, getArenaTables } from "@/lib/scenario";
 import type {
   ArenaDebriefPackage,
   ComputedTableView,
@@ -18,7 +18,7 @@ interface SimApiPayload {
 export default function RoamingAdminConsolePage() {
   const [data, setData] = useState<SimApiPayload | null>(null);
   const [selectedArena, setSelectedArena] = useState<number>(1);
-  const [selectedAct, setSelectedAct] = useState<1 | 2 | 3>(1);
+  const [selectedAct, setSelectedAct] = useState<ActNumber>(1);
   const [busy, setBusy] = useState(false);
 
   const fetchSim = useCallback(async () => {
@@ -43,6 +43,8 @@ export default function RoamingAdminConsolePage() {
     if (data.state.phase === "act1") setSelectedAct(1);
     else if (data.state.phase === "act2") setSelectedAct(2);
     else if (data.state.phase === "act3") setSelectedAct(3);
+    else if (data.state.phase === "act4") setSelectedAct(4);
+    else if (data.state.phase === "act5") setSelectedAct(5);
   }, [data?.state.phase]);
 
   async function handleToggleUnlockArena(unlock: boolean) {
@@ -161,12 +163,12 @@ export default function RoamingAdminConsolePage() {
           </div>
 
           <div className="inline-flex border-2 border-[#121211] divide-x-2 divide-[#121211] bg-[#FAF7F0]">
-            {([1, 2, 3] as const).map((actNum) => (
+            {ALL_ACTS.map((actNum) => (
               <button
                 key={actNum}
                 type="button"
                 onClick={() => setSelectedAct(actNum)}
-                className={`px-3.5 py-2 uppercase font-bold transition cursor-pointer ${
+                className={`px-3 py-2 uppercase font-bold transition cursor-pointer ${
                   selectedAct === actNum
                     ? "bg-[#C8322B] text-[#FAF7F0]"
                     : "text-[#121211] hover:bg-[#E6DFD1]"
@@ -183,7 +185,7 @@ export default function RoamingAdminConsolePage() {
           <div className="flex flex-wrap items-center justify-between gap-4 border-b-2 border-[#121211] pb-4">
             <div>
               <span className="stamp-badge text-[#121211]">
-                Arena {selectedArena} • Act {selectedAct}
+                Arena {selectedArena} • Act {selectedAct} of 5
               </span>
               <h1 className="text-xl font-bold uppercase mt-2">
                 Table {oddTableNum} (Aegis) vs. Table {evenTableNum} (Vanguard)
@@ -211,27 +213,33 @@ export default function RoamingAdminConsolePage() {
             )}
           </div>
 
-          {/* 3-Bullet Read-Aloud Summary */}
+          {/* 4-Bullet Read-Aloud Summary (Including the Jigsaw Twist) */}
           <div className="space-y-3">
             <div className="font-mono-tech text-xs font-bold uppercase text-[#57534E]">
               Read Aloud to Tables {oddTableNum} &amp; {evenTableNum}:
             </div>
             <ul className="space-y-3 font-editorial text-lg leading-relaxed">
+              <li className="p-4 border-2 border-[#121211] bg-[#FAF7F0]">
+                <strong className="font-mono-tech text-xs uppercase text-[#C8322B] block mb-1">
+                  1. The Hidden Jigsaw Twist:
+                </strong>
+                {debriefPkg.readAloudScript.jigsawAndCarryOver}
+              </li>
               <li className="p-4 border-2 border-[#121211] bg-[#F2EDE2]">
                 <strong className="font-mono-tech text-xs uppercase text-[#1846C7] block mb-1">
-                  Table {oddTableNum} (Aegis AI):
+                  2. Table {oddTableNum} (Aegis AI):
                 </strong>
                 {debriefPkg.readAloudScript.aegisSummary}
               </li>
               <li className="p-4 border-2 border-[#121211] bg-[#F2EDE2]">
                 <strong className="font-mono-tech text-xs uppercase text-[#C84B15] block mb-1">
-                  Table {evenTableNum} (Vanguard AI):
+                  3. Table {evenTableNum} (Vanguard AI):
                 </strong>
                 {debriefPkg.readAloudScript.vanguardSummary}
               </li>
               <li className="p-4 border-2 border-[#121211] bg-[#FAF7F0]">
                 <strong className="font-mono-tech text-xs uppercase text-[#166534] block mb-1">
-                  Takeaway:
+                  4. Aegis ↔ Vanguard Collision:
                 </strong>
                 {debriefPkg.readAloudScript.crossArenaCollision}
               </li>
@@ -297,6 +305,19 @@ export default function RoamingAdminConsolePage() {
                     {res.teamDecisionTitle}
                   </div>
                 </div>
+
+                {res.triggeredEvents.length > 0 && (
+                  <div className="p-3 border border-[#121211] bg-[#FAF7F0] font-mono-tech text-xs space-y-1">
+                    <div className="text-[#C8322B] font-bold uppercase text-[10px]">
+                      Combos &amp; Carry-Over Effects:
+                    </div>
+                    {res.triggeredEvents.map((ev, idx) => (
+                      <div key={idx} className="text-[11px] text-[#121211]">
+                        • {ev}
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 <details className="font-mono-tech text-xs">
                   <summary className="cursor-pointer font-bold uppercase text-[#57534E]">

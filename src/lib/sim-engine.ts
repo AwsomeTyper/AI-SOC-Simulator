@@ -4,6 +4,8 @@ import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import {
   ACTS,
   ActDefinition,
+  ActNumber,
+  ALL_ACTS,
   getArenaTables,
   getTableArenaNumber,
   getTableLabId,
@@ -22,13 +24,13 @@ export interface PlayerRecord {
   arenaNumber: number; // 1..5
   labId: LabId;
   roleId: RoleId | null;
-  // Map of actNumber ("1" | "2" | "3") -> optionId
+  // Map of actNumber ("1".."5") -> optionId
   departmentChoices: Record<string, string>;
   joinedAt: string;
 }
 
 export interface ActResolutionSummary {
-  actNumber: 1 | 2 | 3;
+  actNumber: ActNumber;
   teamDecisionId: string | null;
   teamDecisionTitle: string;
   teamDecisionStance: string;
@@ -44,7 +46,11 @@ export interface ActResolutionSummary {
   }[];
   teamDecisionDelta: MetricDelta;
   rivalCrossEffectDelta: MetricDelta;
+  comboAndCarryOverDelta: MetricDelta;
   totalDelta: MetricDelta;
+  triggeredEvents: string[];
+  rivalInteractionNote: string;
+  jigsawReveal: string;
   adminReadoutParagraph: string;
   socLesson: string;
 }
@@ -56,13 +62,13 @@ export interface TableState {
   labName: string;
   shortName: string;
   baseMetrics: MetricDelta;
-  // Team decision optionId per act ("1" | "2" | "3")
+  // Team decision optionId per act ("1".."5")
   teamDecisions: Record<string, string>;
-  // Admin discussion bonus points per act ("1" | "2" | "3")
+  // Admin discussion bonus points per act ("1".."5")
   adminBonusByAct: Record<string, number>;
   // Admin custom notes per act
   adminNotesByAct: Record<string, string>;
-  // Whether the roaming Admin has unlocked the results for each act ("1" | "2" | "3")
+  // Whether the roaming Admin has unlocked the results for each act ("1".."5")
   unlockedActs: Record<string, boolean>;
 }
 
@@ -99,7 +105,7 @@ export interface ComputedTableView extends TableState {
 
 export interface ArenaDebriefPackage {
   arenaNumber: number;
-  actNumber: 1 | 2 | 3;
+  actNumber: ActNumber;
   aegisTable: ComputedTableView;
   vanguardTable: ComputedTableView;
   unlocked: boolean;
@@ -109,6 +115,7 @@ export interface ArenaDebriefPackage {
     aegisSummary: string;
     vanguardSummary: string;
     crossArenaCollision: string;
+    jigsawAndCarryOver: string;
     socTakeaway: string;
   };
 }
@@ -130,6 +137,14 @@ function getSupabaseAdmin(): SupabaseClient | null {
   return supabaseAdmin;
 }
 
+export function phaseToActNumber(phase: PhaseId): ActNumber {
+  if (phase === "act2") return 2;
+  if (phase === "act3") return 3;
+  if (phase === "act4") return 4;
+  if (phase === "act5") return 5;
+  return 1;
+}
+
 export function createInitialSimulationState(): SimulationState {
   const tables: Record<number, TableState> = {};
   for (let t = 1; t <= 10; t++) {
@@ -144,9 +159,15 @@ export function createInitialSimulationState(): SimulationState {
       shortName: profile.shortName,
       baseMetrics: { ...profile.startingMetrics },
       teamDecisions: {},
-      adminBonusByAct: { "1": 0, "2": 0, "3": 0 },
+      adminBonusByAct: { "1": 0, "2": 0, "3": 0, "4": 0, "5": 0 },
       adminNotesByAct: {},
-      unlockedActs: { "1": false, "2": false, "3": false },
+      unlockedActs: {
+        "1": false,
+        "2": false,
+        "3": false,
+        "4": false,
+        "5": false,
+      },
     };
   }
 
@@ -155,7 +176,7 @@ export function createInitialSimulationState(): SimulationState {
     version: 1,
     phase: "lobby",
     rolesAssigned: false,
-    timerSecondsRemaining: 15 * 60,
+    timerSecondsRemaining: 9 * 60,
     timerRunning: false,
     timerLastUpdatedAt: Date.now(),
     tables,
@@ -167,7 +188,7 @@ export function createInitialSimulationState(): SimulationState {
         actor: "SIM-CORE",
         category: "system",
         message:
-          "AI Lab & SOC Crisis Simulator initialized across 5 Arenas (Tables 1–10).",
+          "AI Lab & SOC 5-Act Crisis Simulator initialized across 5 Arenas (Tables 1–10).",
       },
     ],
   };
@@ -181,11 +202,28 @@ declare global {
   var __AI_SOC_LAST_DB_FETCH_MS__: number | undefined;
 }
 
+function normalizeLoadedState(state: SimulationState): SimulationState {
+  for (let t = 1; t <= 10; t++) {
+    if (state.tables?.[t]) {
+      for (const actNum of ALL_ACTS) {
+        const k = String(actNum);
+        if (state.tables[t].adminBonusByAct[k] === undefined) {
+          state.tables[t].adminBonusByAct[k] = 0;
+        }
+        if (state.tables[t].unlockedActs[k] === undefined) {
+          state.tables[t].unlockedActs[k] = false;
+        }
+      }
+    }
+  }
+  return state;
+}
+
 function loadFromDisk(): SimulationState | null {
   try {
     if (fs.existsSync(STATE_FILE_PATH)) {
       const raw = fs.readFileSync(STATE_FILE_PATH, "utf-8");
-      return JSON.parse(raw) as SimulationState;
+      return normalizeLoadedState(JSON.parse(raw) as SimulationState);
     }
   } catch {
     // ignore
@@ -209,8 +247,7 @@ async function syncToSupabase(state: SimulationState) {
       {
         id: "main",
         phase: state.phase,
-        current_act:
-          state.phase === "act2" ? 2 : state.phase === "act3" ? 3 : 1,
+        current_act: phaseToActNumber(state.phase),
         timer_seconds: state.timerSecondsRemaining,
         timer_running: state.timerRunning,
         state_json: state,
@@ -219,7 +256,7 @@ async function syncToSupabase(state: SimulationState) {
       { onConflict: "id" }
     );
   } catch {
-    // Non-blocking fallback to local memory/disk if table not yet migrated or offline
+    // Non-blocking fallback to local memory/disk
   }
 }
 
@@ -235,7 +272,6 @@ export async function getSimulationState(
     }
   }
 
-  // Poll Supabase at most once per 1000ms (or immediately before mutations) so Vercel serverless instances stay in sync
   const nowMs = Date.now();
   if (
     forceDbCheck ||
@@ -258,7 +294,9 @@ export async function getSimulationState(
           (data.state_json as SimulationState).version >
             (global.__AI_SOC_SIM_STATE__?.version ?? 0)
         ) {
-          global.__AI_SOC_SIM_STATE__ = data.state_json as SimulationState;
+          global.__AI_SOC_SIM_STATE__ = normalizeLoadedState(
+            data.state_json as SimulationState
+          );
           saveToDisk(global.__AI_SOC_SIM_STATE__);
         }
       } catch {
@@ -267,8 +305,7 @@ export async function getSimulationState(
     }
   }
 
-  // Advance live countdown timer if running
-  const state = global.__AI_SOC_SIM_STATE__!;
+  const state = normalizeLoadedState(global.__AI_SOC_SIM_STATE__!);
   if (state.timerRunning) {
     const now = Date.now();
     const elapsedSec = Math.floor((now - state.timerLastUpdatedAt) / 1000);
@@ -341,10 +378,24 @@ export function assignRolesAcrossTables(state: SimulationState) {
   state.rolesAssigned = true;
 }
 
+function getChosenOptionForRole(
+  tablePlayers: PlayerRecord[],
+  roleId: RoleId,
+  actNumber: ActNumber
+): string | null {
+  const actKey = String(actNumber);
+  return (
+    tablePlayers
+      .filter((p) => p.roleId === roleId)
+      .map((p) => p.departmentChoices[actKey])
+      .find((val) => Boolean(val)) || null
+  );
+}
+
 export function computeTableResolutionForAct(
   state: SimulationState,
   tableNumber: number,
-  actNumber: 1 | 2 | 3
+  actNumber: ActNumber
 ): ActResolutionSummary {
   const actKey = String(actNumber);
   const actDef: ActDefinition = ACTS[actNumber];
@@ -364,17 +415,23 @@ export function computeTableResolutionForAct(
     growth: 0,
   };
 
+  const chosenOptionIdsThisAct = new Set<string>();
+
   const departmentBreakdown = ROLES.map((roleDef) => {
     const rolePlayers = tablePlayers.filter((p) => p.roleId === roleDef.id);
     const roleAct = actDef.roleBriefings[roleDef.id];
-    // Find first player with this role who submitted an option, or check any player at table
-    const chosenOptionId =
-      rolePlayers
-        .map((p) => p.departmentChoices[actKey])
-        .find((val) => Boolean(val)) || null;
+    const chosenOptionId = getChosenOptionForRole(
+      tablePlayers,
+      roleDef.id,
+      actNumber
+    );
 
     const chosenOption =
       roleAct.options.find((o) => o.id === chosenOptionId) || null;
+
+    if (chosenOption) {
+      chosenOptionIdsThisAct.add(chosenOption.id);
+    }
 
     const delta: MetricDelta = chosenOption
       ? chosenOption.impact
@@ -397,7 +454,7 @@ export function computeTableResolutionForAct(
       evaluation,
       debriefNote: chosenOption
         ? chosenOption.debriefNote
-        : "Department did not submit a specialized action before lockdown.",
+        : "Department did not submit an action before lockdown.",
       delta,
     };
   });
@@ -414,13 +471,176 @@ export function computeTableResolutionForAct(
   const rivalDecisionObj =
     actDef.teamDecisions.find((d) => d.id === rivalDecisionId) || null;
 
-  const rivalCrossEffectDelta: MetricDelta = rivalDecisionObj
-    ? rivalDecisionObj.rivalEffect
+  let rivalCrossEffectDelta: MetricDelta = rivalDecisionObj
+    ? { ...rivalDecisionObj.rivalEffect }
     : { security: 0, capability: 0, trust: 0, growth: 0 };
 
+  let comboAndCarryOverDelta: MetricDelta = {
+    security: 0,
+    capability: 0,
+    trust: 0,
+    growth: 0,
+  };
+  const triggeredEvents: string[] = [];
+
+  // 1. Evaluate Cross-Role Combos (Synergies & Silo Contradictions within the table)
+  for (const combo of actDef.combos) {
+    const allMatched = combo.requiredOptionIds.every((id) =>
+      chosenOptionIdsThisAct.has(id)
+    );
+    if (allMatched) {
+      comboAndCarryOverDelta = addDelta(comboAndCarryOverDelta, combo.delta);
+      triggeredEvents.push(`${combo.title}: ${combo.description}`);
+    }
+  }
+
+  // 2. Evaluate Carry-Over Consequences from Earlier Acts
+  if (actNumber === 2) {
+    const act1Decision = table.teamDecisions["1"];
+    const act1Cyber = getChosenOptionForRole(tablePlayers, "cyber", 1);
+    if (
+      act1Decision === "act1_team_blitz_forward" ||
+      act1Cyber === "cyber_1_firewall_ip_block"
+    ) {
+      const penalty = { security: -4, capability: 0, trust: -2, growth: 0 };
+      comboAndCarryOverDelta = addDelta(comboAndCarryOverDelta, penalty);
+      triggeredEvents.push(
+        "Act 1 Carry-Over Penalty (-4 Sec, -2 Trust): Because your table blocked only the IP in Act 1 without rotating OpenHub tokens, the attacker used that active token to speed up the Act 2 MCP injection."
+      );
+    }
+  }
+
+  if (actNumber === 3) {
+    const rivalAct2Decision = rivalTable.teamDecisions["2"];
+    if (rivalAct2Decision === "act2_team_lock_mcp_and_share_cve") {
+      const bonus = { security: 3, capability: 0, trust: 2, growth: 0 };
+      comboAndCarryOverDelta = addDelta(comboAndCarryOverDelta, bonus);
+      triggeredEvents.push(
+        `Rival Act 2 CVE Advisory (+3 Sec, +2 Trust): Table ${rivalTableNumber}'s early MCP CVE disclosure helped your engineers patch before the swarm escalated.`
+      );
+    }
+  }
+
+  if (actNumber === 4) {
+    const act2Decision = table.teamDecisions["2"];
+    const act2Cyber = getChosenOptionForRole(tablePlayers, "cyber", 2);
+    if (
+      act2Decision === "act2_team_keep_sprint_velocity" ||
+      act2Decision === "act2_team_prompt_patch_only" ||
+      act2Cyber === "cyber_2_block_domain_keep_iam"
+    ) {
+      const penalty = { security: -5, capability: 0, trust: -3, growth: 0 };
+      comboAndCarryOverDelta = addDelta(comboAndCarryOverDelta, penalty);
+      triggeredEvents.push(
+        "Act 2 Carry-Over Penalty (-5 Sec, -3 Trust): Because developer AWS/partner keys were not rotated in Act 2, the attacker used those exact stolen keys to stage the 14:12 UTC deepfake call and upload the poisoned RAG PDF!"
+      );
+    }
+  }
+
+  if (actNumber === 5) {
+    const act1Cyber = getChosenOptionForRole(tablePlayers, "cyber", 1);
+    const act1Decision = table.teamDecisions["1"];
+    const wipedForensicsInAct1 =
+      act1Cyber === "cyber_1_wipe_reboot" ||
+      act1Decision === "act1_team_wipe_and_deny";
+
+    const act4Cyber = getChosenOptionForRole(tablePlayers, "cyber", 4);
+    const act4Decision = table.teamDecisions["4"];
+    const severedPort8443InAct4 =
+      act4Cyber === "cyber_4_sever_8443_and_rekey" ||
+      act4Decision === "act4_team_fido2_and_joint_takedown" ||
+      act4Decision === "act4_team_internal_lockdown";
+
+    if (wipedForensicsInAct1) {
+      const penalty = { security: -3, capability: 0, trust: -5, growth: 0 };
+      comboAndCarryOverDelta = addDelta(comboAndCarryOverDelta, penalty);
+      triggeredEvents.push(
+        "Act 1 Carry-Over Penalty (-3 Sec, -5 Trust): Because your table wiped gpu-stage-04 in Act 1 before saving RAM forensics, your Act 5 NetFlow timeline had a gap that reporters questioned."
+      );
+    }
+
+    if (severedPort8443InAct4) {
+      const bonus = { security: 5, capability: 2, trust: 4, growth: 0 };
+      comboAndCarryOverDelta = addDelta(comboAndCarryOverDelta, bonus);
+      triggeredEvents.push(
+        "Act 4 Carry-Over Bonus (+5 Sec, +4 Trust): Because you severed Port 8443 immediately during the Act 4 deepfake call, the 36.8 MB transfer was cut off mid-header—your Defense LoRA weights remained safe!"
+      );
+    } else if (
+      act4Decision === "act4_team_honeypot_and_spin" ||
+      act4Cyber === "cyber_4_honeypot_watch"
+    ) {
+      const penalty = { security: -6, capability: 0, trust: -4, growth: -2 };
+      comboAndCarryOverDelta = addDelta(comboAndCarryOverDelta, penalty);
+      triggeredEvents.push(
+        "Act 4 Carry-Over Penalty (-6 Sec, -4 Trust): Because Port 8443 was left open as a honeypot in Act 4, the attacker finished downloading your 36.8 MB Defense LoRA adapter!"
+      );
+    }
+  }
+
+  // 3. Direct Aegis <-> Vanguard Head-to-Head Arena Interaction (Current & Previous Act)
+  let rivalInteractionNote = `Rival Table ${rivalTableNumber} (${rivalTable.shortName}) has not locked in a decision yet.`;
+  if (teamDecisionObj && rivalDecisionObj) {
+    if (
+      teamDecisionObj.stance === "cooperative" &&
+      rivalDecisionObj.stance === "cooperative"
+    ) {
+      const mutualBonus = { security: 3, capability: 0, trust: 3, growth: 1 };
+      rivalCrossEffectDelta = addDelta(rivalCrossEffectDelta, mutualBonus);
+      rivalInteractionNote = `Mutual Arena Pact: Both Table ${tableNumber} and Rival Table ${rivalTableNumber} shared IOCs—earning a joint +3 Security / +3 Trust resilience bonus.`;
+    } else if (
+      teamDecisionObj.stance === "cooperative" &&
+      rivalDecisionObj.stance === "aggressive"
+    ) {
+      rivalInteractionNote = `Asymmetric Clash: You shared threat intel transparently while Table ${rivalTableNumber} weaponized the crisis to poach your clients (${rivalCrossEffectDelta.growth} Growth today, but CISA logs will penalize their Trust next round).`;
+    } else if (
+      teamDecisionObj.stance === "aggressive" &&
+      rivalDecisionObj.stance === "cooperative"
+    ) {
+      rivalInteractionNote = `Predatory Edge: You capitalized on Table ${rivalTableNumber}'s transparency to win short-term deals, but CISA audit logs recorded your bad-faith poaching for next round.`;
+    } else if (
+      teamDecisionObj.stance === "aggressive" &&
+      rivalDecisionObj.stance === "aggressive"
+    ) {
+      const mutualPenalty = {
+        security: -3,
+        capability: 0,
+        trust: -4,
+        growth: -2,
+      };
+      rivalCrossEffectDelta = addDelta(rivalCrossEffectDelta, mutualPenalty);
+      rivalInteractionNote = `Arena Bloodbath: Both Table ${tableNumber} and Table ${rivalTableNumber} attacked each other simultaneously—causing mutual CISO backlash (-3 Sec, -4 Trust).`;
+    } else {
+      rivalInteractionNote = `Table ${tableNumber} took a ${teamDecisionObj.stance} stance while Rival Table ${rivalTableNumber} chose a ${rivalDecisionObj.stance} posture.`;
+    }
+  }
+
+  // Check if aggressive poaching in the PREVIOUS Act triggers CISA audit backlash in THIS Act
+  if (actNumber > 1) {
+    const prevKey = String(actNumber - 1);
+    const prevActDef = ACTS[(actNumber - 1) as ActNumber];
+    const myPrevDec = prevActDef.teamDecisions.find(
+      (d) => d.id === table.teamDecisions[prevKey]
+    );
+    const rivalPrevDec = prevActDef.teamDecisions.find(
+      (d) => d.id === rivalTable.teamDecisions[prevKey]
+    );
+    if (
+      myPrevDec?.stance === "aggressive" &&
+      rivalPrevDec?.stance === "cooperative"
+    ) {
+      const backlash = { security: 0, capability: 0, trust: -6, growth: -3 };
+      comboAndCarryOverDelta = addDelta(comboAndCarryOverDelta, backlash);
+      triggeredEvents.push(
+        `Cross-Arena Audit Backlash (-6 Trust, -3 Growth): CISA logs from Act ${
+          actNumber - 1
+        } exposed that you poached Table ${rivalTableNumber}'s clients while hiding the same vulnerability.`
+      );
+    }
+  }
+
   const totalDelta = addDelta(
-    addDelta(deptTotalDelta, teamDecisionDelta),
-    rivalCrossEffectDelta
+    addDelta(addDelta(deptTotalDelta, teamDecisionDelta), rivalCrossEffectDelta),
+    comboAndCarryOverDelta
   );
 
   return {
@@ -433,7 +653,11 @@ export function computeTableResolutionForAct(
     departmentBreakdown,
     teamDecisionDelta,
     rivalCrossEffectDelta,
+    comboAndCarryOverDelta,
     totalDelta,
+    triggeredEvents,
+    rivalInteractionNote,
+    jigsawReveal: actDef.jigsawReveal,
     adminReadoutParagraph: teamDecisionObj
       ? teamDecisionObj.adminReadoutSummary
       : `${table.shortName} hesitated to lock in a unified executive response during Act ${actNumber}, leaving individual departments to operate in silos.`,
@@ -454,18 +678,20 @@ export function computeAllTables(
       .filter((p) => p.tableNumber === t)
       .sort((a, b) => a.joinedAt.localeCompare(b.joinedAt));
 
-    const actResolutions: Record<string, ActResolutionSummary> = {
-      "1": computeTableResolutionForAct(state, t, 1),
-      "2": computeTableResolutionForAct(state, t, 2),
-      "3": computeTableResolutionForAct(state, t, 3),
-    };
+    const actResolutions: Record<string, ActResolutionSummary> = {};
+    for (const actNum of ALL_ACTS) {
+      actResolutions[String(actNum)] = computeTableResolutionForAct(
+        state,
+        t,
+        actNum
+      );
+    }
 
     let runningMetrics: MetricDelta = { ...table.baseMetrics };
     let totalBonus = 0;
 
-    for (const actNum of [1, 2, 3] as const) {
+    for (const actNum of ALL_ACTS) {
       const k = String(actNum);
-      // Apply score changes for acts that are unlocked OR when in debrief
       if (table.unlockedActs[k] || state.phase === "debrief") {
         runningMetrics = addDelta(runningMetrics, actResolutions[k].totalDelta);
         totalBonus += table.adminBonusByAct[k] || 0;
@@ -501,7 +727,7 @@ export function computeAllTables(
 export function buildArenaDebriefPackage(
   state: SimulationState,
   arenaNumber: number,
-  actNumber: 1 | 2 | 3
+  actNumber: ActNumber
 ): ArenaDebriefPackage {
   const computed = computeAllTables(state);
   const [oddTableNum, evenTableNum] = getArenaTables(arenaNumber);
@@ -520,40 +746,32 @@ export function buildArenaDebriefPackage(
     aegisTable.teamDecisions[actKey] && vanguardTable.teamDecisions[actKey]
   );
 
-  // Build dynamic collision narrative between Aegis (Odd Table) and Vanguard (Even Table)
   let crossArenaCollision = "";
   if (
     aegisRes.teamDecisionStance === "cooperative" &&
     vanguardRes.teamDecisionStance === "cooperative"
   ) {
-    crossArenaCollision = `In Arena ${arenaNumber}, BOTH Table ${oddTableNum} (Aegis AI) and Table ${evenTableNum} (Vanguard AI) chose cooperative threat-sharing! By exchanging Indicators of Compromise (IOCs) instead of attacking each other, both labs earned a +4/+5 cross-arena security resilience bonus.`;
+    crossArenaCollision = `In Arena ${arenaNumber}, BOTH Table ${oddTableNum} (Aegis AI) and Table ${evenTableNum} (Vanguard AI) chose cooperative threat-sharing—earning a mutual cross-arena security & trust bonus!`;
   } else if (
     aegisRes.teamDecisionStance === "cooperative" &&
     (vanguardRes.teamDecisionStance === "aggressive" ||
       vanguardRes.teamDecisionStance === "coverup")
   ) {
-    crossArenaCollision = `Dramatic contrast in Arena ${arenaNumber}: Table ${oddTableNum} (Aegis AI) transparently shared forensic threat intel with CISA and their rival, while Table ${evenTableNum} (Vanguard AI) took a ${vanguardRes.teamDecisionStance} stance. Aegis earned major regulatory trust, while Vanguard's aggressive posture backfired once federal logs exposed the full timeline.`;
+    crossArenaCollision = `Arena ${arenaNumber} Clash: Table ${oddTableNum} (Aegis AI) shared forensic IOCs transparently, while Table ${evenTableNum} (Vanguard AI) took a ${vanguardRes.teamDecisionStance} stance to grab short-term commercial ground—setting up a CISA audit backlash against Vanguard next round.`;
   } else if (
     vanguardRes.teamDecisionStance === "cooperative" &&
     (aegisRes.teamDecisionStance === "aggressive" ||
       aegisRes.teamDecisionStance === "coverup")
   ) {
-    crossArenaCollision = `Dramatic contrast in Arena ${arenaNumber}: Table ${evenTableNum} (Vanguard AI) stepped up with transparent forensic threat-sharing, while Table ${oddTableNum} (Aegis AI) took a ${aegisRes.teamDecisionStance} path. Vanguard captured enterprise CISO trust, while Aegis took a heavy regulatory credibility hit.`;
+    crossArenaCollision = `Arena ${arenaNumber} Clash: Table ${evenTableNum} (Vanguard AI) shared forensic IOCs transparently, while Table ${oddTableNum} (Aegis AI) took a ${aegisRes.teamDecisionStance} path—setting up a CISA audit backlash against Aegis next round.`;
   } else if (
     aegisRes.teamDecisionStance === "aggressive" &&
     vanguardRes.teamDecisionStance === "aggressive"
   ) {
-    crossArenaCollision = `Cutthroat collision in Arena ${arenaNumber}! Both Table ${oddTableNum} (Aegis AI) and Table ${evenTableNum} (Vanguard AI) went on the offensive against each other instead of focusing on containment—causing mutual brand damage and leaving lingering security vulnerabilities on both sides.`;
+    crossArenaCollision = `Cutthroat collision in Arena ${arenaNumber}! Both Table ${oddTableNum} (Aegis AI) and Table ${evenTableNum} (Vanguard AI) went on the offensive against each other instead of focusing on containment—causing mutual CISO trust penalties.`;
   } else {
-    crossArenaCollision = `In Arena ${arenaNumber}, Table ${oddTableNum} (Aegis AI) adopted a ${aegisRes.teamDecisionStance} strategy while Table ${evenTableNum} (Vanguard AI) chose a ${vanguardRes.teamDecisionStance} approach.`;
+    crossArenaCollision = `In Arena ${arenaNumber}, Table ${oddTableNum} (Aegis AI) chose a ${aegisRes.teamDecisionStance} strategy while Table ${evenTableNum} (Vanguard AI) chose a ${vanguardRes.teamDecisionStance} approach.`;
   }
-
-  const aegisOptimalCount = aegisRes.departmentBreakdown.filter(
-    (d) => d.evaluation === "optimal"
-  ).length;
-  const vanguardOptimalCount = vanguardRes.departmentBreakdown.filter(
-    (d) => d.evaluation === "optimal"
-  ).length;
 
   return {
     arenaNumber,
@@ -563,11 +781,12 @@ export function buildArenaDebriefPackage(
     unlocked,
     bothTeamsSubmitted,
     readAloudScript: {
-      openingHook: `Attention Arena ${arenaNumber} (Table ${oddTableNum} Aegis AI & Table ${evenTableNum} Vanguard AI): Here is the official SOC debrief for ${actDef.title}.`,
-      aegisSummary: `Table ${oddTableNum} (Aegis AI) chose "${aegisRes.teamDecisionTitle}". ${aegisRes.adminReadoutParagraph} Across their 5 departments, ${aegisOptimalCount} of 5 leads executed optimal security playbooks.`,
-      vanguardSummary: `Table ${evenTableNum} (Vanguard AI) chose "${vanguardRes.teamDecisionTitle}". ${vanguardRes.adminReadoutParagraph} Across their 5 departments, ${vanguardOptimalCount} of 5 leads executed optimal security playbooks.`,
+      openingHook: `Arena ${arenaNumber} (Table ${oddTableNum} Aegis AI & Table ${evenTableNum} Vanguard AI) — Debrief for ${actDef.title}:`,
+      aegisSummary: `Table ${oddTableNum} (Aegis AI) chose "${aegisRes.teamDecisionTitle}". ${aegisRes.adminReadoutParagraph}`,
+      vanguardSummary: `Table ${evenTableNum} (Vanguard AI) chose "${vanguardRes.teamDecisionTitle}". ${vanguardRes.adminReadoutParagraph}`,
       crossArenaCollision,
-      socTakeaway: `Key SOC Takeaway for Act ${actNumber}: ${actDef.learningTakeawayBullets[0]} ${actDef.learningTakeawayBullets[1]}`,
+      jigsawAndCarryOver: actDef.jigsawReveal,
+      socTakeaway: `Key Takeaway: ${actDef.learningTakeawayBullets[0]}`,
     },
   };
 }
@@ -588,7 +807,6 @@ export function seedDemoPlayers(state: SimulationState) {
 
   const roleOrder: RoleId[] = ["ceo", "cyber", "research", "growth", "policy"];
 
-  // Keep any real human players who already checked in so solo testers aren't logged out
   const preservedHumanPlayers: Record<string, PlayerRecord> = {};
   for (const [id, p] of Object.entries(state.players)) {
     if (!id.startsWith("demo-")) {
@@ -605,7 +823,6 @@ export function seedDemoPlayers(state: SimulationState) {
       (p) => p.tableNumber === t
     );
 
-    // Ensure any human players at this table have a role assigned
     const takenRoles = new Set<RoleId>();
     for (const hp of existingAtTable) {
       if (hp.roleId) {
@@ -621,7 +838,6 @@ export function seedDemoPlayers(state: SimulationState) {
       }
     }
 
-    // Fill remaining open roles at this table with demo students up to 5 total
     for (let r = 0; r < 5; r++) {
       const roleId = roleOrder[r];
       if (takenRoles.has(roleId)) continue;

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import { getArenaTables, PhaseId } from "@/lib/scenario";
+import { ActNumber, getArenaTables, PhaseId } from "@/lib/scenario";
 import type {
   ArenaDebriefPackage,
   ComputedTableView,
@@ -19,6 +19,14 @@ function formatTimer(seconds: number): string {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
   return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+}
+
+function getActFromPhase(phase?: string): ActNumber {
+  if (phase === "act2") return 2;
+  if (phase === "act3") return 3;
+  if (phase === "act4") return 4;
+  if (phase === "act5") return 5;
+  return 1;
 }
 
 export default function GameMasterProjectorPage() {
@@ -68,8 +76,8 @@ export default function GameMasterProjectorPage() {
 
   const { state, computedTables, arenaDebriefs } = data;
   const totalPlayers = Object.keys(state.players).length;
-  const currentActNumber: 1 | 2 | 3 =
-    state.phase === "act2" ? 2 : state.phase === "act3" ? 3 : 1;
+  const currentActNumber: ActNumber = getActFromPhase(state.phase);
+  const isActPhase = state.phase.startsWith("act");
 
   const allTablesList = Object.values(computedTables);
   const aegisAggregate = allTablesList
@@ -142,15 +150,17 @@ export default function GameMasterProjectorPage() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-8 space-y-6">
-        {/* Phase Bar & Quick Host Actions */}
-        <div className="dossier-sheet p-4 flex flex-wrap items-center justify-between gap-4 font-mono-tech text-xs">
-          <div className="inline-flex flex-wrap border-2 border-[#121211] divide-x-2 divide-[#121211] bg-[#F2EDE2]">
+        {/* Phase Bar (5 Acts + Lobby + Final Results) & Quick Host Actions */}
+        <div className="dossier-sheet p-4 space-y-3 font-mono-tech text-xs">
+          <div className="flex flex-wrap border-2 border-[#121211] divide-x-2 divide-[#121211] bg-[#F2EDE2]">
             {(
               [
                 { id: "lobby", label: "Lobby" },
-                { id: "act1", label: "Act 1: Hub Breach" },
-                { id: "act2", label: "Act 2: Agent Breakout" },
-                { id: "act3", label: "Act 3: Ransom Bluff" },
+                { id: "act1", label: "Act 1: Supply Chain" },
+                { id: "act2", label: "Act 2: MCP Hijack" },
+                { id: "act3", label: "Act 3: Agent Swarm" },
+                { id: "act4", label: "Act 4: Deepfake/RAG" },
+                { id: "act5", label: "Act 5: 38 MB Twist" },
                 { id: "debrief", label: "Final Results" },
               ] as { id: PhaseId; label: string }[]
             ).map((p) => {
@@ -163,7 +173,7 @@ export default function GameMasterProjectorPage() {
                   onClick={() =>
                     postAction({ action: "gm_set_phase", phase: p.id })
                   }
-                  className={`px-3.5 py-2 uppercase font-bold transition cursor-pointer ${
+                  className={`px-3 py-2 uppercase font-bold transition cursor-pointer ${
                     active
                       ? "bg-[#121211] text-[#FAF7F0]"
                       : "text-[#121211] hover:bg-white"
@@ -192,9 +202,7 @@ export default function GameMasterProjectorPage() {
             >
               Load 50 Demo Players
             </button>
-            {(state.phase === "act1" ||
-              state.phase === "act2" ||
-              state.phase === "act3") && (
+            {isActPhase && (
               <>
                 <button
                   type="button"
@@ -207,7 +215,7 @@ export default function GameMasterProjectorPage() {
                   }
                   className="px-3 py-2 border border-[#121211] bg-[#F2EDE2] hover:bg-white uppercase font-bold cursor-pointer"
                 >
-                  Auto-Fill Choices
+                  Auto-Fill Act {currentActNumber} Choices
                 </button>
                 <button
                   type="button"
@@ -221,7 +229,7 @@ export default function GameMasterProjectorPage() {
                   }
                   className="px-3 py-2 border border-[#121211] bg-[#166534] text-[#FAF7F0] uppercase font-bold cursor-pointer"
                 >
-                  Unlock All Arenas
+                  Unlock All Arenas (Act {currentActNumber})
                 </button>
               </>
             )}

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   ACTS,
+  ActNumber,
+  ALL_ACTS,
   getArenaTables,
   getTableArenaNumber,
   getTableLabId,
@@ -21,12 +23,17 @@ import {
 
 export const dynamic = "force-dynamic";
 
-function buildFullPayload(state: Awaited<ReturnType<typeof getSimulationState>>) {
+function buildFullPayload(
+  state: Awaited<ReturnType<typeof getSimulationState>>
+) {
   const computedTables = computeAllTables(state);
-  const arenaDebriefs: Record<string, ReturnType<typeof buildArenaDebriefPackage>> = {};
+  const arenaDebriefs: Record<
+    string,
+    ReturnType<typeof buildArenaDebriefPackage>
+  > = {};
 
   for (let arena = 1; arena <= 5; arena++) {
-    for (const act of [1, 2, 3] as const) {
+    for (const act of ALL_ACTS) {
       arenaDebriefs[`${arena}-${act}`] = buildArenaDebriefPackage(
         state,
         arena,
@@ -60,7 +67,9 @@ export async function POST(req: NextRequest) {
           const existingPlayerId = body.playerId ? String(body.playerId) : null;
 
           if (!name || tableNumber < 1 || tableNumber > 10) {
-            throw new Error("Please provide your name and select a valid Table (1–10).");
+            throw new Error(
+              "Please provide your name and select a valid Table (1–10)."
+            );
           }
 
           const labId = getTableLabId(tableNumber);
@@ -70,9 +79,7 @@ export async function POST(req: NextRequest) {
               ? existingPlayerId
               : `plr-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
-          // If roles were already assigned, automatically give a newcomer the least-used role at that table
-          let assignedRole: RoleId | null =
-            draft.players[id]?.roleId ?? null;
+          let assignedRole: RoleId | null = draft.players[id]?.roleId ?? null;
 
           if (draft.rolesAssigned && !assignedRole) {
             const tablePlayers = Object.values(draft.players).filter(
@@ -130,7 +137,7 @@ export async function POST(req: NextRequest) {
         case "submit_department_action": {
           const { playerId, actNumber, optionId } = body as {
             playerId: string;
-            actNumber: 1 | 2 | 3;
+            actNumber: ActNumber;
             optionId: string;
           };
           const player = draft.players[playerId];
@@ -149,7 +156,9 @@ export async function POST(req: NextRequest) {
             actNumber,
             actor: `${player.name} (${roleObj?.shortTitle || "Specialist"})`,
             category: "player",
-            message: `Table ${player.tableNumber}: ${roleObj?.shortTitle || player.name} locked in their Act ${actNumber} department action.`,
+            message: `Table ${player.tableNumber}: ${
+              roleObj?.shortTitle || player.name
+            } locked in their Act ${actNumber} department action.`,
           });
           break;
         }
@@ -157,7 +166,7 @@ export async function POST(req: NextRequest) {
         case "submit_team_decision": {
           const { tableNumber, actNumber, decisionId, actorName } = body as {
             tableNumber: number;
-            actNumber: 1 | 2 | 3;
+            actNumber: ActNumber;
             decisionId: string;
             actorName?: string;
           };
@@ -165,7 +174,9 @@ export async function POST(req: NextRequest) {
           if (!table) throw new Error("Invalid table number.");
           const actKey = String(actNumber);
           if (table.unlockedActs[actKey]) {
-            throw new Error("This Act has already been debriefed and unlocked.");
+            throw new Error(
+              "This Act has already been debriefed and unlocked."
+            );
           }
 
           table.teamDecisions[actKey] = decisionId;
@@ -179,7 +190,9 @@ export async function POST(req: NextRequest) {
             actNumber,
             actor: actorName || `Table ${tableNumber} Command`,
             category: "team",
-            message: `Table ${tableNumber} (${table.shortName}) locked in Act ${actNumber} Lab Strategy: "${decisionObj?.title || decisionId}". Ready for Admin Debrief!`,
+            message: `Table ${tableNumber} (${table.shortName}) locked in Act ${actNumber} Lab Strategy: "${
+              decisionObj?.title || decisionId
+            }". Ready for Admin Debrief!`,
           });
           break;
         }
@@ -190,22 +203,32 @@ export async function POST(req: NextRequest) {
             actor: "GM-CONTROL",
             category: "system",
             message:
-              "Auto-assigned Executive & SOC roles (CEO, SOC Lead, AI Research, Growth, Safety & Policy) across all 10 tables.",
+              "Auto-assigned Executive & SOC roles across all 10 tables.",
           });
           break;
         }
 
         case "gm_set_phase": {
           const nextPhase = body.phase as PhaseId;
-          if (!["lobby", "act1", "act2", "act3", "debrief"].includes(nextPhase)) {
+          if (
+            ![
+              "lobby",
+              "act1",
+              "act2",
+              "act3",
+              "act4",
+              "act5",
+              "debrief",
+            ].includes(nextPhase)
+          ) {
             throw new Error("Invalid phase.");
           }
           if (nextPhase !== "lobby" && !draft.rolesAssigned) {
             assignRolesAcrossTables(draft);
           }
           draft.phase = nextPhase;
-          if (nextPhase === "act1" || nextPhase === "act2" || nextPhase === "act3") {
-            draft.timerSecondsRemaining = 12 * 60;
+          if (nextPhase.startsWith("act")) {
+            draft.timerSecondsRemaining = 9 * 60;
             draft.timerRunning = true;
             draft.timerLastUpdatedAt = Date.now();
           } else if (nextPhase === "debrief") {
@@ -232,7 +255,7 @@ export async function POST(req: NextRequest) {
             draft.timerRunning = false;
           } else if (command === "reset") {
             draft.timerRunning = false;
-            draft.timerSecondsRemaining = 12 * 60;
+            draft.timerSecondsRemaining = 9 * 60;
             draft.timerLastUpdatedAt = Date.now();
           } else if (command === "set" && typeof seconds === "number") {
             draft.timerSecondsRemaining = Math.max(0, seconds);
@@ -244,7 +267,7 @@ export async function POST(req: NextRequest) {
         case "admin_unlock_arena_act": {
           const { arenaNumber, actNumber, unlocked, adminName } = body as {
             arenaNumber: number;
-            actNumber: 1 | 2 | 3;
+            actNumber: ActNumber;
             unlocked: boolean;
             adminName?: string;
           };
@@ -259,7 +282,9 @@ export async function POST(req: NextRequest) {
             actor: adminName || `Admin (Arena ${arenaNumber})`,
             category: "admin",
             message: `${adminName || "Admin"} ${
-              unlocked ? "completed read-aloud debrief and UNLOCKED" : "re-locked"
+              unlocked
+                ? "completed read-aloud debrief and UNLOCKED"
+                : "re-locked"
             } Act ${actNumber} results for Arena ${arenaNumber} (Tables ${oddTable} & ${evenTable}).`,
           });
           break;
@@ -267,7 +292,7 @@ export async function POST(req: NextRequest) {
 
         case "admin_unlock_all_arenas_act": {
           const { actNumber, unlocked } = body as {
-            actNumber: 1 | 2 | 3;
+            actNumber: ActNumber;
             unlocked: boolean;
           };
           const actKey = String(actNumber);
@@ -288,7 +313,7 @@ export async function POST(req: NextRequest) {
         case "admin_adjust_bonus": {
           const { tableNumber, actNumber, delta, adminName } = body as {
             tableNumber: number;
-            actNumber: 1 | 2 | 3;
+            actNumber: ActNumber;
             delta: number;
             adminName?: string;
           };
@@ -304,7 +329,11 @@ export async function POST(req: NextRequest) {
             actNumber,
             actor: adminName || "Roaming Admin",
             category: "admin",
-            message: `Admin awarded ${delta >= 0 ? `+${delta}` : delta} discussion bonus points to Table ${tableNumber} (${table.shortName}) in Act ${actNumber}.`,
+            message: `Admin awarded ${
+              delta >= 0 ? `+${delta}` : delta
+            } discussion bonus points to Table ${tableNumber} (${
+              table.shortName
+            }) in Act ${actNumber}.`,
           });
           break;
         }
@@ -315,13 +344,13 @@ export async function POST(req: NextRequest) {
             actor: "GM-CONTROL",
             category: "system",
             message:
-              "Seeded 50 demo college student players (5 per table across Tables 1–10) with assigned roles.",
+              "Seeded demo college student players across Tables 1–10 with assigned roles.",
           });
           break;
         }
 
         case "gm_autofill_act_choices": {
-          const actNumber = (body.actNumber || 1) as 1 | 2 | 3;
+          const actNumber = (body.actNumber || 1) as ActNumber;
           const actKey = String(actNumber);
           const actDef = ACTS[actNumber];
 
