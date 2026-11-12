@@ -37,7 +37,8 @@ function buildFullPayload(
       arenaDebriefs[`${arena}-${act}`] = buildArenaDebriefPackage(
         state,
         arena,
-        act
+        act,
+        computedTables
       );
     }
   }

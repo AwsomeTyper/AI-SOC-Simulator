@@ -132,6 +132,13 @@ function getSupabaseAdmin(): SupabaseClient | null {
   if (url && key) {
     supabaseAdmin = createClient(url, key, {
       auth: { persistSession: false },
+      global: {
+        fetch: (input, init) =>
+          fetch(input, {
+            ...init,
+            signal: init?.signal ?? AbortSignal.timeout(800),
+          }),
+      },
     });
   }
   return supabaseAdmin;
@@ -200,6 +207,8 @@ declare global {
   var __AI_SOC_SIM_STATE__: SimulationState | undefined;
   // eslint-disable-next-line no-var
   var __AI_SOC_LAST_DB_FETCH_MS__: number | undefined;
+  // eslint-disable-next-line no-var
+  var __AI_SOC_DB_BACKOFF_UNTIL__: number | undefined;
 }
 
 function normalizeLoadedState(state: SimulationState): SimulationState {
@@ -242,8 +251,14 @@ function saveToDisk(state: SimulationState) {
 async function syncToSupabase(state: SimulationState) {
   const sb = getSupabaseAdmin();
   if (!sb) return;
+  if (
+    global.__AI_SOC_DB_BACKOFF_UNTIL__ &&
+    Date.now() < global.__AI_SOC_DB_BACKOFF_UNTIL__
+  ) {
+    return;
+  }
   try {
-    await sb.from("sim_sessions").upsert(
+    const { error } = await sb.from("sim_sessions").upsert(
       {
         id: "main",
         phase: state.phase,
@@ -255,14 +270,51 @@ async function syncToSupabase(state: SimulationState) {
       },
       { onConflict: "id" }
     );
+    if (error) {
+      global.__AI_SOC_DB_BACKOFF_UNTIL__ = Date.now() + 30_000;
+    }
   } catch {
-    // Non-blocking fallback to local memory/disk
+    global.__AI_SOC_DB_BACKOFF_UNTIL__ = Date.now() + 30_000;
   }
 }
 
-export async function getSimulationState(
-  forceDbCheck = false
-): Promise<SimulationState> {
+async function pullFromSupabaseInBackground() {
+  const sb = getSupabaseAdmin();
+  if (!sb) return;
+  if (
+    global.__AI_SOC_DB_BACKOFF_UNTIL__ &&
+    Date.now() < global.__AI_SOC_DB_BACKOFF_UNTIL__
+  ) {
+    return;
+  }
+  try {
+    const { data, error } = await sb
+      .from("sim_sessions")
+      .select("state_json")
+      .eq("id", "main")
+      .single();
+    if (error) {
+      global.__AI_SOC_DB_BACKOFF_UNTIL__ = Date.now() + 30_000;
+      return;
+    }
+    if (
+      data?.state_json &&
+      typeof data.state_json === "object" &&
+      "version" in data.state_json &&
+      (data.state_json as SimulationState).version >
+        (global.__AI_SOC_SIM_STATE__?.version ?? 0)
+    ) {
+      global.__AI_SOC_SIM_STATE__ = normalizeLoadedState(
+        data.state_json as SimulationState
+      );
+      saveToDisk(global.__AI_SOC_SIM_STATE__);
+    }
+  } catch {
+    global.__AI_SOC_DB_BACKOFF_UNTIL__ = Date.now() + 30_000;
+  }
+}
+
+export async function getSimulationState(): Promise<SimulationState> {
   if (!global.__AI_SOC_SIM_STATE__) {
     const diskState = loadFromDisk();
     if (diskState) {
@@ -272,37 +324,14 @@ export async function getSimulationState(
     }
   }
 
+  // Non-blocking background sync check so API responses are always < 5ms
   const nowMs = Date.now();
   if (
-    forceDbCheck ||
     !global.__AI_SOC_LAST_DB_FETCH_MS__ ||
-    nowMs - global.__AI_SOC_LAST_DB_FETCH_MS__ > 1000
+    nowMs - global.__AI_SOC_LAST_DB_FETCH_MS__ > 2500
   ) {
     global.__AI_SOC_LAST_DB_FETCH_MS__ = nowMs;
-    const sb = getSupabaseAdmin();
-    if (sb) {
-      try {
-        const { data } = await sb
-          .from("sim_sessions")
-          .select("state_json")
-          .eq("id", "main")
-          .single();
-        if (
-          data?.state_json &&
-          typeof data.state_json === "object" &&
-          "version" in data.state_json &&
-          (data.state_json as SimulationState).version >
-            (global.__AI_SOC_SIM_STATE__?.version ?? 0)
-        ) {
-          global.__AI_SOC_SIM_STATE__ = normalizeLoadedState(
-            data.state_json as SimulationState
-          );
-          saveToDisk(global.__AI_SOC_SIM_STATE__);
-        }
-      } catch {
-        // Ignore if table doesn't exist yet
-      }
-    }
+    void pullFromSupabaseInBackground();
   }
 
   const state = normalizeLoadedState(global.__AI_SOC_SIM_STATE__!);
@@ -327,7 +356,7 @@ export async function getSimulationState(
 export async function updateSimulationState(
   mutator: (draft: SimulationState) => void
 ): Promise<SimulationState> {
-  const state = await getSimulationState(true);
+  const state = await getSimulationState();
   const prevVersion = state.version || 1;
   mutator(state);
   state.version = Math.max(prevVersion, state.version || 1) + 1;
@@ -335,7 +364,7 @@ export async function updateSimulationState(
     state.auditLogs = state.auditLogs.slice(0, 120);
   }
   saveToDisk(state);
-  await syncToSupabase(state);
+  void syncToSupabase(state);
   return state;
 }
 
@@ -727,9 +756,10 @@ export function computeAllTables(
 export function buildArenaDebriefPackage(
   state: SimulationState,
   arenaNumber: number,
-  actNumber: ActNumber
+  actNumber: ActNumber,
+  precomputedTables?: Record<number, ComputedTableView>
 ): ArenaDebriefPackage {
-  const computed = computeAllTables(state);
+  const computed = precomputedTables ?? computeAllTables(state);
   const [oddTableNum, evenTableNum] = getArenaTables(arenaNumber);
   const aegisTable = computed[oddTableNum];
   const vanguardTable = computed[evenTableNum];
